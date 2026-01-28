@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
-import { useParams } from 'react-router-dom';
-import { collection, query, where, getDocs } from 'firebase/firestore';
+import { useParams, useNavigate } from 'react-router-dom';
+import { collection, query, where, getDocs, doc, getDoc } from 'firebase/firestore';
 import { db } from '../firebase';
 import VideoCard from '../components/VideoCard';
 import { Loader2, UserCircle } from 'lucide-react';
@@ -9,6 +9,7 @@ import EditChannelModal from '../components/EditChannelModal';
 
 const Channel = () => {
     const { uid } = useParams();
+    const navigate = useNavigate();
     const [videos, setVideos] = useState([]);
     const [loading, setLoading] = useState(true);
     const [channelName, setChannelName] = useState('Channel');
@@ -76,7 +77,7 @@ const Channel = () => {
                     {isOwner ? (
                         <div className="flex gap-2">
                             <button
-                                onClick={() => setIsEditModalOpen(true)}
+                                onClick={() => navigate('/studio/customization')}
                                 className="bg-[#272727] text-white px-4 py-2 rounded-full font-medium hover:bg-[#3F3F3F] transition-colors"
                             >
                                 Customize Channel

@@ -8,6 +8,8 @@ import Upload from './pages/Upload';
 import Channel from './pages/Channel';
 import { AuthProvider } from './context/AuthContext';
 
+import ChannelCustomization from './pages/ChannelCustomization';
+
 function App() {
   const [isSidebarOpen, setIsSidebarOpen] = useState(true);
 
@@ -30,6 +32,7 @@ function App() {
                 <Route path="/video/:id" element={<Video />} />
                 <Route path="/upload" element={<Upload />} />
                 <Route path="/channel/:uid" element={<Channel />} />
+                <Route path="/studio/customization" element={<ChannelCustomization />} />
               </Routes>
             </main>
           </div>
