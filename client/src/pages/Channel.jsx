@@ -13,6 +13,11 @@ const Channel = () => {
     const [videos, setVideos] = useState([]);
     const [loading, setLoading] = useState(true);
     const [channelData, setChannelData] = useState(null);
+    const [channelName, setChannelName] = useState('Channel');
+    const [activeTab, setActiveTab] = useState('videos');
+    const [isEditModalOpen, setIsEditModalOpen] = useState(false);
+    const { currentUser } = useAuth();
+    const isOwner = currentUser?.uid === uid;
 
     useEffect(() => {
         const fetchData = async () => {
