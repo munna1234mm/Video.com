@@ -142,7 +142,7 @@ const Channel = () => {
                                 <Loader2 className="w-8 h-8 animate-spin text-white" />
                             </div>
                         ) : (
-                            <div className="grid grid-cols-1 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-4">
+                            <div className="grid grid-cols-1 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-4 [&>*]:max-w-[350px] sm:[&>*]:max-w-none [&>*]:mx-auto sm:[&>*]:mx-0">
                                 {videos.length === 0 ? (
                                     <div className="col-span-full text-center text-gray-500 py-10">
                                         This channel has no videos yet.
