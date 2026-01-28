@@ -56,7 +56,7 @@ const Home = () => {
                     <Loader2 className="w-8 h-8 animate-spin text-white" />
                 </div>
             ) : (
-                <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-x-3 sm:gap-x-4 gap-y-4 sm:gap-y-8 px-0 sm:px-4 pb-8">
+                <div className="grid grid-cols-2 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-x-3 sm:gap-x-4 gap-y-4 sm:gap-y-8 px-2 sm:px-4 pb-8">
                     {videos.length === 0 ? (
                         <div className="col-span-full text-center text-gray-500 mt-10 flex flex-col items-center">
                             <p className="text-xl font-semibold mb-2">No videos yet</p>
