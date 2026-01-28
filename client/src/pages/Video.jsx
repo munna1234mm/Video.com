@@ -56,9 +56,45 @@ const Video = () => {
                         ></iframe>
                     ) : (
                         <video
+                            ref={(el) => {
+                                // Save ref and add keyboard listeners
+                                if (el && !window.videoRefLocked) {
+                                    window.videoRef = el;
+
+                                    const handleKeyDown = (e) => {
+                                        if (e.target.tagName === 'INPUT' || e.target.tagName === 'TEXTAREA') return;
+
+                                        switch (e.key.toLowerCase()) {
+                                            case ' ':
+                                            case 'k':
+                                                e.preventDefault();
+                                                el.paused ? el.play() : el.pause();
+                                                break;
+                                            case 'arrowleft':
+                                                el.currentTime = Math.max(0, el.currentTime - 10);
+                                                break;
+                                            case 'arrowright':
+                                                el.currentTime = Math.min(el.duration, el.currentTime + 10);
+                                                break;
+                                            case 'm':
+                                                el.muted = !el.muted;
+                                                break;
+                                            case 'f':
+                                                document.fullscreenElement ? document.exitFullscreen() : el.requestFullscreen();
+                                                break;
+                                        }
+                                    };
+
+                                    // Remove old listener if exists to prevent duplicates on re-render
+                                    document.removeEventListener('keydown', window.videoKeyDownHandler);
+                                    window.videoKeyDownHandler = handleKeyDown;
+                                    document.addEventListener('keydown', handleKeyDown);
+                                    window.videoRefLocked = true;
+                                }
+                            }}
                             src={video.videoUrl}
                             controls
-                            className="w-full h-full"
+                            className="w-full h-full focus:outline-none"
                             poster={video.thumbnailUrl}
                         >
                             Your browser does not support the video tag.
