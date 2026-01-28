@@ -1,8 +1,8 @@
+
 import React, { useState } from 'react';
 import { Upload as UploadIcon, X, Image as ImageIcon, CheckCircle, AlertCircle } from 'lucide-react';
-import { ref, uploadBytesResumable, getDownloadURL } from "firebase/storage";
 import { collection, addDoc, serverTimestamp } from "firebase/firestore";
-import { db, storage } from '../firebase';
+import { db } from '../firebase';
 import { useAuth } from '../context/AuthContext';
 import { useNavigate } from 'react-router-dom';
 
@@ -27,24 +27,29 @@ const Upload = () => {
         }
     };
 
-    const uploadFile = (file, path) => {
-        return new Promise((resolve, reject) => {
-            const storageRef = ref(storage, path);
-            const uploadTask = uploadBytesResumable(storageRef, file);
+    const uploadToCloudinary = async (file, resourceType = 'auto') => {
+        const formData = new FormData();
+        formData.append('file', file);
+        formData.append('upload_preset', 'developeer'); // User provided preset
+        formData.append('cloud_name', 'da8dgsbfn'); // User provided cloud name
 
-            uploadTask.on('state_changed',
-                (snapshot) => {
-                    const progress = (snapshot.bytesTransferred / snapshot.totalBytes) * 100;
-                    if (file.type.startsWith('video')) {
-                        setUploadPerc(Math.round(progress));
-                    }
-                },
-                (error) => reject(error),
-                () => {
-                    getDownloadURL(uploadTask.snapshot.ref).then(resolve);
-                }
-            );
-        });
+        try {
+            const res = await fetch(`https://api.cloudinary.com/v1_1/da8dgsbfn/${resourceType}/upload`, {
+                method: 'POST',
+                body: formData,
+            });
+
+            if (!res.ok) {
+                const errorData = await res.json();
+                throw new Error(errorData.error?.message || 'Upload failed');
+            }
+
+            const data = await res.json();
+            return data.secure_url;
+        } catch (error) {
+            console.error("Cloudinary Upload Error:", error);
+            throw error;
+        }
     };
 
     const handleUpload = async (e) => {
@@ -54,18 +59,28 @@ const Upload = () => {
 
         setIsUploading(true);
         setStatus("uploading");
+        setUploadPerc(0);
+
+        // Fake progress for Cloudinary (since fetch doesn't support progress easily without XHR/Axios)
+        // For a better experience we could use axios, but keeping it dependency-free for now
+        const progressInterval = setInterval(() => {
+            setUploadPerc((prev) => {
+                if (prev >= 90) return 90;
+                return prev + 10;
+            });
+        }, 1000);
 
         try {
-            // Parallel Uploads for Speed ⚡
-            // We start both video and thumbnail uploads at the same time
-            const videoPromise = uploadFile(video, `videos/${currentUser.uid}/${Date.now()}_${video.name}`);
-
+            // Parallel Uploads
+            const videoPromise = uploadToCloudinary(video, 'video');
             const thumbnailPromise = thumbnail
-                ? uploadFile(thumbnail, `thumbnails/${currentUser.uid}/${Date.now()}_${thumbnail.name}`)
-                : Promise.resolve("https://picsum.photos/400/225"); // Fallback
+                ? uploadToCloudinary(thumbnail, 'image')
+                : Promise.resolve("https://picsum.photos/400/225");
 
             const [videoUrl, thumbnailUrl] = await Promise.all([videoPromise, thumbnailPromise]);
 
+            clearInterval(progressInterval);
+            setUploadPerc(100);
             setStatus("processing");
 
             // Add to Firestore
@@ -85,10 +100,12 @@ const Upload = () => {
             });
 
             setStatus("success");
-            setTimeout(() => navigate('/'), 2000); // Redirect after success
+            setTimeout(() => navigate('/'), 2000);
 
         } catch (err) {
+            clearInterval(progressInterval);
             console.error("Upload failed:", err);
+            alert("Upload failed: " + err.message);
             setStatus("error");
             setIsUploading(false);
         }
@@ -236,8 +253,8 @@ const Upload = () => {
                             onClick={handleUpload}
                             disabled={isUploading || !video || !title}
                             className={`px-6 py-2 rounded-full font-medium text-white transition-all ${isUploading || !video || !title
-                                    ? 'bg-gray-700 cursor-not-allowed text-gray-500'
-                                    : 'bg-blue-600 hover:bg-blue-700 shadow-lg shadow-blue-900/20'
+                                ? 'bg-gray-700 cursor-not-allowed text-gray-500'
+                                : 'bg-blue-600 hover:bg-blue-700 shadow-lg shadow-blue-900/20'
                                 }`}
                         >
                             {isUploading ? 'Uploading...' : 'Upload Video'}

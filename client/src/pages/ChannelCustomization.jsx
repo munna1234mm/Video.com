@@ -1,9 +1,7 @@
 import React, { useState, useEffect } from 'react';
-import { useAuth } from '../context/AuthContext';
-import { db, storage } from '../firebase';
+import { db } from '../firebase';
 import { doc, getDoc, setDoc } from "firebase/firestore";
 import { updateProfile } from 'firebase/auth';
-import { ref, uploadBytes, getDownloadURL } from "firebase/storage";
 import { Upload, User, Image as ImageIcon, Layout, Info } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 
@@ -58,24 +56,34 @@ const ChannelCustomization = () => {
         }
     };
 
-    const uploadFile = async (file, path) => {
-        const storageRef = ref(storage, path);
-        const snapshot = await uploadBytes(storageRef, file);
-        return getDownloadURL(snapshot.ref);
+    const uploadToCloudinary = async (file) => {
+        const formData = new FormData();
+        formData.append('file', file);
+        formData.append('upload_preset', 'developeer');
+        formData.append('cloud_name', 'da8dgsbfn');
+
+        const res = await fetch(`https://api.cloudinary.com/v1_1/da8dgsbfn/image/upload`, {
+            method: 'POST',
+            body: formData,
+        });
+
+        if (!res.ok) throw new Error('Image upload failed');
+        const data = await res.json();
+        return data.secure_url;
     };
 
     const handleSave = async () => {
         setLoading(true);
         try {
             let newPhotoURL = currentUser.photoURL;
-            let newBannerURL = bannerPreview; // Default to current preview if not changed
+            let newBannerURL = bannerPreview;
 
-            // 1. Upload Images if changed
+            // 1. Upload Images to Cloudinary if changed
             if (profileImage) {
-                newPhotoURL = await uploadFile(profileImage, `profiles/${currentUser.uid}_${Date.now()}`);
+                newPhotoURL = await uploadToCloudinary(profileImage);
             }
             if (bannerImage) {
-                newBannerURL = await uploadFile(bannerImage, `banners/${currentUser.uid}_${Date.now()}`);
+                newBannerURL = await uploadToCloudinary(bannerImage);
             }
 
             // 2. Update Auth Profile
@@ -116,8 +124,8 @@ const ChannelCustomization = () => {
                     <button
                         onClick={() => setActiveTab('branding')}
                         className={`px-6 py-3 font-medium text-sm transition-colors ${activeTab === 'branding'
-                                ? 'border-b-2 border-blue-500 text-blue-500'
-                                : 'text-gray-400 hover:text-white'
+                            ? 'border-b-2 border-blue-500 text-blue-500'
+                            : 'text-gray-400 hover:text-white'
                             }`}
                     >
                         Branding
@@ -125,8 +133,8 @@ const ChannelCustomization = () => {
                     <button
                         onClick={() => setActiveTab('basic')}
                         className={`px-6 py-3 font-medium text-sm transition-colors ${activeTab === 'basic'
-                                ? 'border-b-2 border-blue-500 text-blue-500'
-                                : 'text-gray-400 hover:text-white'
+                            ? 'border-b-2 border-blue-500 text-blue-500'
+                            : 'text-gray-400 hover:text-white'
                             }`}
                     >
                         Basic Info
