@@ -11,7 +11,7 @@ import { AuthProvider } from './context/AuthContext';
 import ChannelCustomization from './pages/ChannelCustomization';
 
 function App() {
-  const [isSidebarOpen, setIsSidebarOpen] = useState(true);
+  const [isSidebarOpen, setIsSidebarOpen] = useState(window.innerWidth > 768);
 
   const toggleSidebar = () => {
     setIsSidebarOpen(!isSidebarOpen);
@@ -24,7 +24,7 @@ function App() {
           <Navbar toggleSidebar={toggleSidebar} />
 
           <div className="flex pt-14">
-            <Sidebar isOpen={isSidebarOpen} />
+            <Sidebar isOpen={isSidebarOpen} toggleSidebar={toggleSidebar} />
 
             <main className={`flex-1 transition-all duration-300 ${isSidebarOpen ? 'md:ml-60' : 'ml-0'}`}>
               <Routes>

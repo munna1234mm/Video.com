@@ -58,43 +58,43 @@ const Navbar = ({ toggleSidebar }) => {
             </form>
 
             {/* Right */}
-            <div className="flex items-center gap-2 md:gap-4">
-                <Link to="/upload" className="hidden md:block p-2 hover:bg-[#272727] rounded-full transition-colors">
-                    <Video className="text-white w-6 h-6" />
+            <div className="flex items-center gap-1 md:gap-4">
+                <Link to="/upload" className="block p-2 hover:bg-[#272727] rounded-full transition-colors">
+                    <Video className="text-white w-5 h-5 md:w-6 md:h-6" />
                 </Link>
-                <button className="hidden md:block p-2 hover:bg-[#272727] rounded-full transition-colors relative">
+                <button className="hidden sm:block p-2 hover:bg-[#272727] rounded-full transition-colors relative">
                     <Bell className="text-white w-6 h-6" />
                     <span className="absolute top-1 right-1 bg-red-600 text-white text-[10px] px-1 rounded-full">9+</span>
                 </button>
 
                 {/* User Auth Info */}
                 {currentUser ? (
-                    <div className="flex items-center gap-3">
+                    <div className="flex items-center gap-1 md:gap-3">
                         <img
                             src={currentUser.photoURL}
                             alt={currentUser.displayName}
-                            className="w-8 h-8 rounded-full border border-[#272727]"
+                            className="w-7 h-7 md:w-8 md:h-8 rounded-full border border-[#272727]"
                             title={currentUser.displayName}
                         />
                         <Link
                             to={`/channel/${currentUser.uid}`}
-                            className="text-sm font-medium text-white hover:bg-[#272727] px-3 py-1.5 rounded-full border border-[#303030]"
+                            className="text-[10px] md:text-sm font-medium text-white hover:bg-[#272727] px-2 md:px-3 py-1 md:py-1.5 rounded-full border border-[#303030] whitespace-nowrap"
                         >
-                            My Channel
+                            Channel
                         </Link>
                         <button
                             onClick={logout}
-                            className="text-sm font-medium text-red-400 hover:bg-[#272727] px-3 py-1.5 rounded-full border border-[#303030]"
+                            className="text-[10px] md:text-sm font-medium text-red-400 hover:bg-[#272727] px-2 md:px-3 py-1 md:py-1.5 rounded-full border border-[#303030]"
                         >
-                            Sign Out
+                            Exit
                         </button>
                     </div>
                 ) : (
                     <button
                         onClick={loginWithGoogle}
-                        className="flex items-center gap-2 text-[#3ea6ff] border border-[#3ea6ff] px-4 py-1.5 rounded-full font-medium hover:bg-[#263850] transition-colors"
+                        className="flex items-center gap-1 md:gap-2 text-[#3ea6ff] border border-[#3ea6ff] px-3 md:px-4 py-1 md:py-1.5 rounded-full font-medium hover:bg-[#263850] transition-colors text-xs md:text-base"
                     >
-                        <UserCircle className="w-5 h-5" />
+                        <UserCircle className="w-4 h-4 md:w-5 md:h-5" />
                         Sign in
                     </button>
                 )}
