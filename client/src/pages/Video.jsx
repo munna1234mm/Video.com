@@ -50,7 +50,7 @@ const Video = () => {
             {/* Main Content */}
             <div className="flex-1">
                 {/* Video Player Placeholder - In a real app with 'Storage', use <video src={url} /> */}
-                <div className="w-full max-h-[72vh] aspect-video bg-black rounded-xl overflow-hidden shadow-lg relative mx-auto">
+                <div className="w-full max-h-[40vh] md:max-h-[72vh] aspect-video bg-black rounded-none md:rounded-xl overflow-hidden shadow-lg relative mx-auto">
                     {video.videoUrl && video.videoUrl.includes('youtube.com') || video.videoUrl.includes('youtu.be') ? (
                         <iframe
                             width="100%"
