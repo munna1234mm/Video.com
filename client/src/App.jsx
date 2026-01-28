@@ -5,6 +5,7 @@ import Sidebar from './components/Sidebar';
 import Home from './pages/Home';
 import Video from './pages/Video';
 import Upload from './pages/Upload';
+import Channel from './pages/Channel';
 import { AuthProvider } from './context/AuthContext';
 
 function App() {
@@ -28,6 +29,7 @@ function App() {
                 <Route path="/" element={<Home />} />
                 <Route path="/video/:id" element={<Video />} />
                 <Route path="/upload" element={<Upload />} />
+                <Route path="/channel/:uid" element={<Channel />} />
               </Routes>
             </main>
           </div>

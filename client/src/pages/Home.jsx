@@ -58,8 +58,9 @@ const Home = () => {
             ) : (
                 <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-x-4 gap-y-8 px-4 pb-8">
                     {videos.length === 0 ? (
-                        <div className="col-span-full text-center text-gray-500 mt-10">
-                            No videos found. Check your Firebase content or add some videos.
+                        <div className="col-span-full text-center text-gray-500 mt-10 flex flex-col items-center">
+                            <p className="text-xl font-semibold mb-2">No videos yet</p>
+                            <p className="text-sm">Be the first to upload a video to this community!</p>
                         </div>
                     ) : (
                         videos.map((video) => (

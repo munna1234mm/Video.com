@@ -76,9 +76,15 @@ const Navbar = ({ toggleSidebar }) => {
                             className="w-8 h-8 rounded-full border border-[#272727]"
                             title={currentUser.displayName}
                         />
+                        <Link
+                            to={`/channel/${currentUser.uid}`}
+                            className="text-sm font-medium text-white hover:bg-[#272727] px-3 py-1.5 rounded-full border border-[#303030]"
+                        >
+                            My Channel
+                        </Link>
                         <button
                             onClick={logout}
-                            className="text-sm font-medium text-white hover:bg-[#272727] px-3 py-1 rounded-full border border-[#303030]"
+                            className="text-sm font-medium text-red-400 hover:bg-[#272727] px-3 py-1.5 rounded-full border border-[#303030]"
                         >
                             Sign Out
                         </button>
