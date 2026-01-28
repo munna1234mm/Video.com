@@ -5,6 +5,7 @@ import { db } from '../firebase';
 import VideoCard from '../components/VideoCard';
 import { Loader2, UserCircle } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
+import EditChannelModal from '../components/EditChannelModal';
 
 const Channel = () => {
     const { uid } = useParams();
@@ -12,6 +13,7 @@ const Channel = () => {
     const [loading, setLoading] = useState(true);
     const [channelName, setChannelName] = useState('Channel');
     const [activeTab, setActiveTab] = useState('videos');
+    const [isEditModalOpen, setIsEditModalOpen] = useState(false);
     const { currentUser } = useAuth();
     const isOwner = currentUser?.uid === uid;
 
@@ -73,7 +75,10 @@ const Channel = () => {
                 <div className="mt-4 md:mt-0">
                     {isOwner ? (
                         <div className="flex gap-2">
-                            <button className="bg-[#272727] text-white px-4 py-2 rounded-full font-medium hover:bg-[#3F3F3F] transition-colors">
+                            <button
+                                onClick={() => setIsEditModalOpen(true)}
+                                className="bg-[#272727] text-white px-4 py-2 rounded-full font-medium hover:bg-[#3F3F3F] transition-colors"
+                            >
                                 Customize Channel
                             </button>
                             <button className="bg-[#272727] text-white px-4 py-2 rounded-full font-medium hover:bg-[#3F3F3F] transition-colors">
@@ -146,6 +151,11 @@ const Channel = () => {
                     </div>
                 )}
             </div>
+
+            <EditChannelModal
+                isOpen={isEditModalOpen}
+                onClose={() => setIsEditModalOpen(false)}
+            />
         </div>
     );
 };

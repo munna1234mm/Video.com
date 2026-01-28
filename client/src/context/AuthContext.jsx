@@ -10,8 +10,19 @@ export const AuthProvider = ({ children }) => {
     const [currentUser, setCurrentUser] = useState(null);
     const [loading, setLoading] = useState(true);
 
-    const loginWithGoogle = () => {
-        return signInWithPopup(auth, googleProvider);
+    const loginWithGoogle = async () => {
+        try {
+            await signInWithPopup(auth, googleProvider);
+        } catch (error) {
+            console.error("Login failed:", error);
+            if (error.code === 'auth/popup-closed-by-user') {
+                alert("Sign in was cancelled.");
+            } else if (error.code === 'auth/unauthorized-domain') {
+                alert("Domain not authorized! Add this domain to Firebase Console > Authentication > Settings > Authorized Domains.");
+            } else {
+                alert("Login failed: " + error.message);
+            }
+        }
     };
 
     const logout = () => {
