@@ -13,13 +13,38 @@ body {
 ::-webkit-scrollbar {
   width: 8px;
 }
+
 ::-webkit-scrollbar-track {
   background: #0f0f0f;
 }
+
 ::-webkit-scrollbar-thumb {
   background: #606060;
   border-radius: 4px;
 }
+
 ::-webkit-scrollbar-thumb:hover {
   background: #909090;
+}
+
+/* Mobile Utilities */
+.no-scrollbar::-webkit-scrollbar {
+  display: none;
+}
+
+.no-scrollbar {
+  -ms-overflow-style: none;
+  scrollbar-width: none;
+}
+
+/* Ensure images don't distort */
+img {
+  image-rendering: -webkit-optimize-contrast;
+}
+
+/* Global Grid Fix for small phones */
+@media (max-width: 480px) {
+  .grid {
+    gap: 1.5rem !important;
+  }
 }
