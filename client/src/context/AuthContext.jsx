@@ -35,7 +35,17 @@ export const AuthProvider = ({ children }) => {
 
     return (
         <AuthContext.Provider value={value}>
-            {!loading && children}
+            {loading ? (
+                <div className="flex items-center justify-center h-screen bg-[#0F0F0F] text-white">
+                    <div className="flex flex-col items-center gap-4">
+                        <div className="w-10 h-10 border-4 border-blue-600 border-t-transparent rounded-full animate-spin"></div>
+                        <p>Loading YouTube Lite...</p>
+                        <p className="text-xs text-gray-500">If this takes too long, check the browser console for errors.</p>
+                    </div>
+                </div>
+            ) : (
+                children
+            )}
         </AuthContext.Provider>
     );
 };

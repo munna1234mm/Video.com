@@ -12,6 +12,10 @@ const firebaseConfig = {
     appId: import.meta.env.VITE_FIREBASE_APP_ID
 };
 
+if (!firebaseConfig.apiKey) {
+    console.error("FIREBASE CONFIGURATION MISSING! Please add VITE_FIREBASE_API_KEY and other variables to your .env file or Render Environment Variables.");
+}
+
 const app = initializeApp(firebaseConfig);
 export const auth = getAuth(app);
 export const googleProvider = new GoogleAuthProvider();
