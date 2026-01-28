@@ -4,13 +4,9 @@ import { Loader2 } from 'lucide-react';
 import { collection, getDocs } from 'firebase/firestore';
 import { db } from '../firebase';
 
-const CATEGORIES = [
-    "All", "Gaming", "Music", "Live", "Mixes", "React Routers",
-    "Computer programming", "Gadgets", "Podcasts", "Sketch comedy", "Recent"
-];
+// Categories removed as per user request
 
 const Home = () => {
-    const [selectedCategory, setSelectedCategory] = useState("All");
     const [videos, setVideos] = useState([]);
     const [loading, setLoading] = useState(true);
 
@@ -30,25 +26,10 @@ const Home = () => {
             }
         };
         fetchVideos();
-    }, [selectedCategory]);
+    }, []);
 
     return (
         <div className="w-full h-full pt-4">
-            {/* Category Pills */}
-            <div className="flex gap-3 overflow-x-auto pb-4 px-4 sticky top-14 bg-[#0F0F0F] z-30 scrollbar-hide whitespace-nowrap">
-                {CATEGORIES.map((category) => (
-                    <button
-                        key={category}
-                        onClick={() => setSelectedCategory(category)}
-                        className={`px-3 py-1.5 rounded-lg text-sm font-medium whitespace-nowrap transition-colors
-              ${selectedCategory === category
-                                ? 'bg-white text-black'
-                                : 'bg-[#272727] text-white hover:bg-[#3F3F3F]'}`}
-                    >
-                        {category}
-                    </button>
-                ))}
-            </div>
 
             {/* Video Grid */}
             {loading ? (
