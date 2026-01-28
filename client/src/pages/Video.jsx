@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useParams } from 'react-router-dom';
 import { ThumbsUp, ThumbsDown, Share2, Loader2 } from 'lucide-react';
-import { doc, getDoc } from 'firebase/firestore';
+import { doc, getDoc, setDoc, increment } from 'firebase/firestore';
 import { db } from '../firebase';
 
 const Video = () => {
@@ -17,6 +17,14 @@ const Video = () => {
 
                 if (docSnap.exists()) {
                     setVideo({ id: docSnap.id, ...docSnap.data() });
+
+                    // Increment View Count
+                    // Use a flag in sessionStorage to prevent duplicate views on reload
+                    const hasViewed = sessionStorage.getItem(`viewed_${id}`);
+                    if (!hasViewed) {
+                        await setDoc(docRef, { views: increment(1) }, { merge: true });
+                        sessionStorage.setItem(`viewed_${id}`, 'true');
+                    }
                 } else {
                     console.log("No such video!");
                 }
@@ -110,14 +118,21 @@ const Video = () => {
 
                     {/* Channel Info */}
                     <div className="flex items-center gap-3">
-                        <div className="w-10 h-10 bg-purple-600 rounded-full flex items-center justify-center text-white font-bold">
-                            {video.uploader ? video.uploader[0] : 'U'}
+                        <div
+                            className="w-10 h-10 bg-purple-600 rounded-full flex items-center justify-center text-white font-bold cursor-pointer overflow-hidden"
+                            onClick={() => window.location.href = `/channel/${video.userId}`}
+                        >
+                            {/* Try to show channel avatar if we fetched it, otherwise fallback */}
+                            <img src={`https://api.dicebear.com/7.x/avataaars/svg?seed=${video.uploader}`} alt="Channel" />
                         </div>
-                        <div>
+                        <div className="cursor-pointer" onClick={() => window.location.href = `/channel/${video.userId}`}>
                             <h3 className="font-bold text-white">{video.uploader || 'Unknown Channel'}</h3>
                             <p className="text-xs text-[#AAAAAA]">1.2M subscribers</p>
                         </div>
-                        <button className="bg-white text-black px-4 py-2 rounded-full font-medium ml-4 hover:bg-gray-200 transition-colors">
+                        <button
+                            className="bg-white text-black px-4 py-2 rounded-full font-medium ml-4 hover:bg-gray-200 transition-colors"
+                            onClick={() => alert("Subscribed! (Simulation)")}
+                        >
                             Subscribe
                         </button>
                     </div>
@@ -125,7 +140,21 @@ const Video = () => {
                     {/* Buttons */}
                     <div className="flex items-center gap-2 overflow-x-auto no-scrollbar">
                         <div className="flex items-center bg-[#272727] rounded-full overflow-hidden">
-                            <button className="flex items-center gap-2 px-4 py-2 hover:bg-[#3F3F3F] border-r border-[#3F3F3F]">
+                            <button
+                                className="flex items-center gap-2 px-4 py-2 hover:bg-[#3F3F3F] border-r border-[#3F3F3F]"
+                                onClick={async () => {
+                                    // Simple Like Logic: Increment in Firestore
+                                    if (!video.id) return;
+                                    try {
+                                        const docRef = doc(db, "videos", video.id);
+                                        await setDoc(docRef, { likes: (video.likes || 0) + 1 }, { merge: true });
+                                        setVideo(prev => ({ ...prev, likes: (prev.likes || 0) + 1 }));
+                                    } catch (e) {
+                                        console.error("Error liking video:", e);
+                                        alert("Login required to like!");
+                                    }
+                                }}
+                            >
                                 <ThumbsUp className="w-5 h-5" /> {video.likes || 0}
                             </button>
                             <button className="px-4 py-2 hover:bg-[#3F3F3F]">
@@ -133,7 +162,13 @@ const Video = () => {
                             </button>
                         </div>
 
-                        <button className="flex items-center gap-2 bg-[#272727] px-4 py-2 rounded-full hover:bg-[#3F3F3F]">
+                        <button
+                            className="flex items-center gap-2 bg-[#272727] px-4 py-2 rounded-full hover:bg-[#3F3F3F]"
+                            onClick={() => {
+                                navigator.clipboard.writeText(window.location.href);
+                                alert("Link copied to clipboard!");
+                            }}
+                        >
                             <Share2 className="w-5 h-5" /> Share
                         </button>
                     </div>

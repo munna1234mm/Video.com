@@ -12,16 +12,20 @@ const Channel = () => {
     const navigate = useNavigate();
     const [videos, setVideos] = useState([]);
     const [loading, setLoading] = useState(true);
-    const [channelName, setChannelName] = useState('Channel');
-    const [activeTab, setActiveTab] = useState('videos');
-    const [isEditModalOpen, setIsEditModalOpen] = useState(false);
-    const { currentUser } = useAuth();
-    const isOwner = currentUser?.uid === uid;
+    const [channelData, setChannelData] = useState(null);
 
     useEffect(() => {
-        const fetchChannelVideos = async () => {
+        const fetchData = async () => {
             try {
-                // Query videos regarding this userID
+                // 1. Fetch Channel User Data (for Banner, Description, etc.)
+                const userDocRef = doc(db, "users", uid);
+                const userSnap = await getDoc(userDocRef);
+                if (userSnap.exists()) {
+                    setChannelData(userSnap.data());
+                    setChannelName(userSnap.data().displayName || 'Channel');
+                }
+
+                // 2. Fetch Videos
                 const q = query(collection(db, "videos"), where("userId", "==", uid));
                 const querySnapshot = await getDocs(q);
                 const videoList = querySnapshot.docs.map(doc => ({
@@ -30,36 +34,43 @@ const Channel = () => {
                 }));
                 setVideos(videoList);
 
-                if (videoList.length > 0) {
+                // Fallback for name if user doc doesn't exist or is loading
+                if (!userSnap.exists() && videoList.length > 0) {
                     setChannelName(videoList[0].uploader || 'Channel');
-                } else if (isOwner && currentUser.displayName) {
-                    setChannelName(currentUser.displayName);
                 }
             } catch (err) {
-                console.error("Error fetching channel videos:", err);
+                console.error("Error fetching data:", err);
             } finally {
                 setLoading(false);
             }
         };
-        fetchChannelVideos();
+        fetchData();
     }, [uid, currentUser, isOwner]);
+
+    const handleShare = () => {
+        navigator.clipboard.writeText(window.location.href);
+        alert("Channel link copied to clipboard!");
+    };
 
     return (
         <div className="w-full h-full overflow-y-auto bg-[#0F0F0F] text-white">
             {/* Channel Banner */}
             <div className="w-full h-32 md:h-48 bg-gradient-to-r from-gray-800 to-gray-900 relative">
-                {/* Banner Image Placeholder */}
-                <div className="absolute inset-0 flex items-center justify-center text-gray-600">
-                    <span className="opacity-20 text-4xl font-bold">BANNER AREA</span>
-                </div>
+                {channelData?.bannerURL ? (
+                    <img src={channelData.bannerURL} alt="Banner" className="w-full h-full object-cover" />
+                ) : (
+                    <div className="absolute inset-0 flex items-center justify-center text-gray-600">
+                        <span className="opacity-20 text-4xl font-bold">BANNER AREA</span>
+                    </div>
+                )}
             </div>
 
             {/* Channel Header Info */}
             <div className="px-4 md:px-12 py-6 flex flex-col md:flex-row items-center md:items-start gap-6 border-b border-[#272727]">
                 <div className="w-24 h-24 md:w-32 md:h-32 bg-purple-600 rounded-full flex items-center justify-center text-white text-5xl font-bold border-4 border-[#0F0F0F] -mt-12 md:-mt-16 z-10 shrink-0 overflow-hidden">
                     {/* Use Google Photo logic if available */}
-                    {isOwner && currentUser?.photoURL ? (
-                        <img src={currentUser.photoURL} alt="Profile" className="w-full h-full object-cover" />
+                    {channelData?.photoURL ? (
+                        <img src={channelData.photoURL} alt="Profile" className="w-full h-full object-cover" />
                     ) : (
                         channelName[0]?.toUpperCase() || <UserCircle className="w-20 h-20" />
                     )}
@@ -69,11 +80,17 @@ const Channel = () => {
                     <h1 className="text-3xl font-bold">{channelName}</h1>
                     <p className="text-gray-400">@{channelName.replace(/\s/g, '').toLowerCase()} • {videos.length} videos</p>
                     <p className="text-gray-400 text-sm mt-2 max-w-2xl line-clamp-2">
-                        Welcome to {channelName}'s channel. Subscribe for more content!
+                        {channelData?.description || `Welcome to ${channelName}'s channel. Subscribe for more content!`}
                     </p>
                 </div>
 
-                <div className="mt-4 md:mt-0">
+                <div className="mt-4 md:mt-0 flex gap-2">
+                    <button
+                        onClick={handleShare}
+                        className="bg-[#272727] text-white px-4 py-2 rounded-full font-medium hover:bg-[#3F3F3F] transition-colors"
+                    >
+                        Share
+                    </button>
                     {isOwner ? (
                         <div className="flex gap-2">
                             <button
