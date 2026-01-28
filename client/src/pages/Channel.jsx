@@ -4,12 +4,16 @@ import { collection, query, where, getDocs } from 'firebase/firestore';
 import { db } from '../firebase';
 import VideoCard from '../components/VideoCard';
 import { Loader2, UserCircle } from 'lucide-react';
+import { useAuth } from '../context/AuthContext';
 
 const Channel = () => {
     const { uid } = useParams();
     const [videos, setVideos] = useState([]);
     const [loading, setLoading] = useState(true);
     const [channelName, setChannelName] = useState('Channel');
+    const [activeTab, setActiveTab] = useState('videos');
+    const { currentUser } = useAuth();
+    const isOwner = currentUser?.uid === uid;
 
     useEffect(() => {
         const fetchChannelVideos = async () => {
@@ -25,6 +29,8 @@ const Channel = () => {
 
                 if (videoList.length > 0) {
                     setChannelName(videoList[0].uploader || 'Channel');
+                } else if (isOwner && currentUser.displayName) {
+                    setChannelName(currentUser.displayName);
                 }
             } catch (err) {
                 console.error("Error fetching channel videos:", err);
@@ -33,44 +39,113 @@ const Channel = () => {
             }
         };
         fetchChannelVideos();
-    }, [uid]);
+    }, [uid, currentUser, isOwner]);
 
     return (
-        <div className="w-full h-full pt-4 px-4">
-            {/* Channel Header */}
-            <div className="flex flex-col items-center justify-center gap-4 mb-8 border-b border-[#272727] pb-8">
-                <div className="w-24 h-24 bg-purple-600 rounded-full flex items-center justify-center text-white text-4xl font-bold">
-                    {channelName[0]?.toUpperCase() || <UserCircle className="w-16 h-16" />}
+        <div className="w-full h-full overflow-y-auto bg-[#0F0F0F] text-white">
+            {/* Channel Banner */}
+            <div className="w-full h-32 md:h-48 bg-gradient-to-r from-gray-800 to-gray-900 relative">
+                {/* Banner Image Placeholder */}
+                <div className="absolute inset-0 flex items-center justify-center text-gray-600">
+                    <span className="opacity-20 text-4xl font-bold">BANNER AREA</span>
                 </div>
-                <div className="text-center">
-                    <h1 className="text-2xl font-bold text-white">{channelName}</h1>
-                    <p className="text-gray-400">@{channelName.replace(/\s/g, '').toLowerCase()}</p>
-                    <p className="text-gray-500 text-sm mt-1">{videos.length} videos</p>
+            </div>
+
+            {/* Channel Header Info */}
+            <div className="px-4 md:px-12 py-6 flex flex-col md:flex-row items-center md:items-start gap-6 border-b border-[#272727]">
+                <div className="w-24 h-24 md:w-32 md:h-32 bg-purple-600 rounded-full flex items-center justify-center text-white text-5xl font-bold border-4 border-[#0F0F0F] -mt-12 md:-mt-16 z-10 shrink-0 overflow-hidden">
+                    {/* Use Google Photo logic if available */}
+                    {isOwner && currentUser?.photoURL ? (
+                        <img src={currentUser.photoURL} alt="Profile" className="w-full h-full object-cover" />
+                    ) : (
+                        channelName[0]?.toUpperCase() || <UserCircle className="w-20 h-20" />
+                    )}
                 </div>
-                <button className="bg-white text-black px-6 py-2 rounded-full font-medium hover:bg-gray-200 transition-colors">
-                    Subscribe
+
+                <div className="flex-1 text-center md:text-left">
+                    <h1 className="text-3xl font-bold">{channelName}</h1>
+                    <p className="text-gray-400">@{channelName.replace(/\s/g, '').toLowerCase()} • {videos.length} videos</p>
+                    <p className="text-gray-400 text-sm mt-2 max-w-2xl line-clamp-2">
+                        Welcome to {channelName}'s channel. Subscribe for more content!
+                    </p>
+                </div>
+
+                <div className="mt-4 md:mt-0">
+                    {isOwner ? (
+                        <div className="flex gap-2">
+                            <button className="bg-[#272727] text-white px-4 py-2 rounded-full font-medium hover:bg-[#3F3F3F] transition-colors">
+                                Customize Channel
+                            </button>
+                            <button className="bg-[#272727] text-white px-4 py-2 rounded-full font-medium hover:bg-[#3F3F3F] transition-colors">
+                                Manage Videos
+                            </button>
+                        </div>
+                    ) : (
+                        <button className="bg-white text-black px-6 py-2 rounded-full font-medium hover:bg-gray-200 transition-colors">
+                            Subscribe
+                        </button>
+                    )}
+                </div>
+            </div>
+
+            {/* Tabs Navigation */}
+            <div className="px-4 md:px-12 flex gap-8 border-b border-[#272727] sticky top-0 bg-[#0F0F0F] z-20">
+                <button
+                    onClick={() => setActiveTab('videos')}
+                    className={`py-3 font-medium border-b-2 transition-colors ${activeTab === 'videos' ? 'border-white text-white' : 'border-transparent text-gray-400 hover:text-white'}`}
+                >
+                    Videos
+                </button>
+                <button
+                    onClick={() => setActiveTab('about')}
+                    className={`py-3 font-medium border-b-2 transition-colors ${activeTab === 'about' ? 'border-white text-white' : 'border-transparent text-gray-400 hover:text-white'}`}
+                >
+                    About
                 </button>
             </div>
 
-            {/* Video Grid */}
-            <h2 className="text-xl font-bold text-white mb-4">Uploads</h2>
-            {loading ? (
-                <div className="flex justify-center items-center h-64">
-                    <Loader2 className="w-8 h-8 animate-spin text-white" />
-                </div>
-            ) : (
-                <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-x-4 gap-y-8 pb-8">
-                    {videos.length === 0 ? (
-                        <div className="col-span-full text-center text-gray-500 mt-10">
-                            This channel has no videos yet.
+            {/* Tab Content */}
+            <div className="px-4 md:px-12 py-6">
+                {activeTab === 'videos' && (
+                    <>
+                        <h2 className="text-lg font-bold mb-4">Latest Videos</h2>
+                        {loading ? (
+                            <div className="flex justify-center items-center h-40">
+                                <Loader2 className="w-8 h-8 animate-spin text-white" />
+                            </div>
+                        ) : (
+                            <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-4">
+                                {videos.length === 0 ? (
+                                    <div className="col-span-full text-center text-gray-500 py-10">
+                                        This channel has no videos yet.
+                                    </div>
+                                ) : (
+                                    videos.map((video) => (
+                                        <VideoCard key={video.id} video={video} />
+                                    ))
+                                )}
+                            </div>
+                        )}
+                    </>
+                )}
+
+                {activeTab === 'about' && (
+                    <div className="max-w-3xl">
+                        <h3 className="text-lg font-bold mb-4">Description</h3>
+                        <p className="text-gray-300 bg-[#272727] p-4 rounded-lg">
+                            This is the official channel of {channelName}. Here you will find videos about technology, coding, and more.
+                        </p>
+
+                        <div className="mt-6 grid grid-cols-2 gap-4">
+                            <div>
+                                <h4 className="text-sm text-gray-400 font-bold mb-2">Stats</h4>
+                                <p className="text-sm">Joined {new Date().toLocaleDateString()}</p>
+                                <p className="text-sm">{videos.length} videos</p>
+                            </div>
                         </div>
-                    ) : (
-                        videos.map((video) => (
-                            <VideoCard key={video.id} video={video} />
-                        ))
-                    )}
-                </div>
-            )}
+                    </div>
+                )}
+            </div>
         </div>
     );
 };
