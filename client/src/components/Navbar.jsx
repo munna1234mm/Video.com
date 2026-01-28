@@ -70,23 +70,29 @@ const Navbar = ({ toggleSidebar }) => {
                 {/* User Auth Info */}
                 {currentUser ? (
                     <div className="flex items-center gap-1 md:gap-3">
-                        <img
-                            src={currentUser.photoURL}
-                            alt={currentUser.displayName}
-                            className="w-7 h-7 md:w-8 md:h-8 rounded-full border border-[#272727]"
-                            title={currentUser.displayName}
-                        />
+                        <Link to={`/channel/${currentUser.uid}`}>
+                            <img
+                                src={currentUser.photoURL}
+                                alt={currentUser.displayName}
+                                className="w-7 h-7 md:w-8 md:h-8 rounded-full border border-[#272727] cursor-pointer"
+                                title={currentUser.displayName}
+                            />
+                        </Link>
                         <Link
                             to={`/channel/${currentUser.uid}`}
-                            className="text-[10px] md:text-sm font-medium text-white hover:bg-[#272727] px-2 md:px-3 py-1 md:py-1.5 rounded-full border border-[#303030] whitespace-nowrap"
+                            className="hidden md:block text-sm font-medium text-white hover:bg-[#272727] px-3 py-1.5 rounded-full border border-[#303030] whitespace-nowrap"
                         >
                             Channel
                         </Link>
                         <button
                             onClick={logout}
-                            className="text-[10px] md:text-sm font-medium text-red-400 hover:bg-[#272727] px-2 md:px-3 py-1 md:py-1.5 rounded-full border border-[#303030]"
+                            className="text-[10px] md:text-sm font-medium text-red-400 hover:bg-[#272727] p-2 md:px-3 md:py-1.5 rounded-full border border-transparent md:border-[#303030] flex items-center justify-center"
+                            title="Exit"
                         >
-                            Exit
+                            <span className="hidden md:inline">Exit</span>
+                            <span className="md:hidden">
+                                <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="lucide lucide-log-out"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4" /><polyline points="16 17 21 12 16 7" /><line x1="21" x2="9" y1="12" y2="12" /></svg>
+                            </span>
                         </button>
                     </div>
                 ) : (
