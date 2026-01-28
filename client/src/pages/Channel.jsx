@@ -10,6 +10,18 @@ import EditChannelModal from '../components/EditChannelModal';
 const Channel = () => {
     const { uid } = useParams();
     const navigate = useNavigate();
+    // ... rest of state
+
+    const linkify = (text) => {
+        if (!text) return null;
+        const urlRegex = /(https?:\/\/[^\s]+)/g;
+        return text.split(urlRegex).map((part, i) => {
+            if (part.match(urlRegex)) {
+                return <a key={i} href={part} target="_blank" rel="noopener noreferrer" className="text-blue-400 hover:underline">{part}</a>;
+            }
+            return part;
+        });
+    };
     const [videos, setVideos] = useState([]);
     const [loading, setLoading] = useState(true);
     const [channelData, setChannelData] = useState(null);
@@ -65,7 +77,7 @@ const Channel = () => {
                     <img src={channelData.bannerURL} alt="Banner" className="w-full h-full object-cover" />
                 ) : (
                     <div className="absolute inset-0 flex items-center justify-center text-gray-600">
-                        <span className="opacity-20 text-4xl font-bold">BANNER AREA</span>
+                        <span className="opacity-20 text-4xl font-bold uppercase tracking-widest">{channelName}</span>
                     </div>
                 )}
             </div>
@@ -83,7 +95,7 @@ const Channel = () => {
 
                 <div className="flex-1 text-center md:text-left">
                     <h1 className="text-3xl font-bold">{channelName}</h1>
-                    <p className="text-gray-400">@{channelName.replace(/\s/g, '').toLowerCase()} • {videos.length} videos</p>
+                    <p className="text-gray-400">@{channelName.replace(/\s/g, '').toLowerCase()} • {channelData?.subscribers || 0} subscribers • {videos.length} videos</p>
                     <p className="text-gray-400 text-sm mt-2 max-w-2xl line-clamp-2">
                         {channelData?.description || `Welcome to ${channelName}'s channel. Subscribe for more content!`}
                     </p>

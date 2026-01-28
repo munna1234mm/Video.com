@@ -45,7 +45,7 @@ const Upload = () => {
             }
 
             const data = await res.json();
-            return data.secure_url;
+            return data; // Return full data to get duration
         } catch (error) {
             console.error("Cloudinary Upload Error:", error);
             throw error;
@@ -75,9 +75,30 @@ const Upload = () => {
             const videoPromise = uploadToCloudinary(video, 'video');
             const thumbnailPromise = thumbnail
                 ? uploadToCloudinary(thumbnail, 'image')
-                : Promise.resolve("https://picsum.photos/400/225");
+                : Promise.resolve({ secure_url: "https://picsum.photos/400/225" });
 
-            const [videoUrl, thumbnailUrl] = await Promise.all([videoPromise, thumbnailPromise]);
+            const [videoData, thumbnailData] = await Promise.all([videoPromise, thumbnailPromise]);
+
+            const videoUrl = videoData.secure_url;
+            const thumbnailUrl = thumbnailData.secure_url;
+
+            // Format duration (seconds to MM:SS or HH:MM:SS)
+            const durationSec = Math.round(videoData.duration || 0);
+            const formatDuration = (seconds) => {
+                if (!seconds) return "00:00";
+                const h = Math.floor(seconds / 3600);
+                const m = Math.floor((seconds % 3600) / 60);
+                const s = seconds % 60;
+
+                const mDisplay = m < 10 ? `0${m}` : m;
+                const sDisplay = s < 10 ? `0${s}` : s;
+
+                if (h > 0) {
+                    return `${h}:${mDisplay}:${sDisplay}`;
+                }
+                return `${mDisplay}:${sDisplay}`; // Force MM:SS even if m is 0 (e.g., 00:05)
+            };
+            const durationFormatted = formatDuration(durationSec);
 
             clearInterval(progressInterval);
             setUploadPerc(100);
@@ -96,6 +117,7 @@ const Upload = () => {
                 views: 0,
                 likes: 0,
                 dislikes: 0,
+                duration: durationFormatted,
                 uploadDate: serverTimestamp()
             });
 

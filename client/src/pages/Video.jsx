@@ -1,8 +1,10 @@
 import React, { useState, useEffect } from 'react';
 import { useParams } from 'react-router-dom';
 import { ThumbsUp, ThumbsDown, Share2, Loader2 } from 'lucide-react';
-import { doc, getDoc, setDoc, increment } from 'firebase/firestore';
+import { doc, getDoc, setDoc, increment, collection, addDoc, serverTimestamp, query, orderBy, onSnapshot } from 'firebase/firestore';
 import { db } from '../firebase';
+import { useAuth } from '../context/AuthContext';
+import { useToast } from '../context/ToastContext';
 
 const Video = () => {
     const { id } = useParams();
@@ -40,7 +42,70 @@ const Video = () => {
     if (loading) return <div className="flex justify-center mt-20"><Loader2 className="animate-spin text-white" /></div>;
     if (!video) return <div className="text-white text-center mt-20">Video not found</div>;
 
-    // Handle date display safely
+    const { currentUser } = useAuth();
+    const { addToast } = useToast();
+    const [comments, setComments] = useState([]);
+    const [newComment, setNewComment] = useState("");
+
+    useEffect(() => {
+        if (id) {
+            const q = query(
+                collection(db, "videos", id, "comments"),
+                orderBy("timestamp", "desc")
+            );
+            const unsubscribe = onSnapshot(q, (snapshot) => {
+                const commentsData = snapshot.docs.map(doc => ({
+                    id: doc.id,
+                    ...doc.data()
+                }));
+                setComments(commentsData);
+            });
+            return () => unsubscribe();
+        }
+    }, [id]);
+
+    const handleComment = async (e) => {
+        e.preventDefault();
+        if (!currentUser) return addToast("Please sign in to comment", "error");
+        if (!newComment.trim()) return;
+
+        try {
+            await addDoc(collection(db, "videos", id, "comments"), {
+                userId: currentUser.uid,
+                userName: currentUser.displayName || "User",
+                userPhoto: currentUser.photoURL,
+                text: newComment,
+                timestamp: serverTimestamp()
+            });
+            setNewComment("");
+            addToast("Comment added", "success");
+        } catch (error) {
+            console.error("Error adding comment:", error);
+            addToast("Failed to add comment", "error");
+        }
+    };
+
+    const handleSubscribe = async () => {
+        if (!currentUser) return addToast("Please sign in to subscribe", "error");
+        if (!video.userId) return;
+
+        // Fake Subscribe Logic for now (just increments user doc)
+        // In real app, we'd check if already subscribed
+        try {
+            const channelRef = doc(db, "users", video.userId);
+            await setDoc(channelRef, { subscribers: increment(1) }, { merge: true });
+            addToast("Subscribed!", "success");
+        } catch (error) {
+            console.error("Error subscribing:", error);
+        }
+    };
+
+    // Handle Copy Link with Toast
+    const handleCopyLink = () => {
+        navigator.clipboard.writeText(window.location.href);
+        addToast("Link copied to clipboard", "success");
+    };
+
     const formattedDate = video.uploadDate?.seconds
         ? new Date(video.uploadDate.seconds * 1000).toLocaleDateString()
         : (video.uploadDate ? new Date(video.uploadDate).toLocaleDateString() : 'Unknown date');
@@ -131,7 +196,7 @@ const Video = () => {
                         </div>
                         <button
                             className="bg-white text-black px-4 py-2 rounded-full font-medium ml-4 hover:bg-gray-200 transition-colors"
-                            onClick={() => alert("Subscribed! (Simulation)")}
+                            onClick={handleSubscribe}
                         >
                             Subscribe
                         </button>
@@ -151,7 +216,7 @@ const Video = () => {
                                         setVideo(prev => ({ ...prev, likes: (prev.likes || 0) + 1 }));
                                     } catch (e) {
                                         console.error("Error liking video:", e);
-                                        alert("Login required to like!");
+                                        addToast("Login required to like!", "error");
                                     }
                                 }}
                             >
@@ -164,10 +229,7 @@ const Video = () => {
 
                         <button
                             className="flex items-center gap-2 bg-[#272727] px-4 py-2 rounded-full hover:bg-[#3F3F3F]"
-                            onClick={() => {
-                                navigator.clipboard.writeText(window.location.href);
-                                alert("Link copied to clipboard!");
-                            }}
+                            onClick={handleCopyLink}
                         >
                             <Share2 className="w-5 h-5" /> Share
                         </button>
@@ -188,14 +250,61 @@ const Video = () => {
                         <h3 className="text-xl font-bold">Comments</h3>
                     </div>
 
-                    {/* Add Comment */}
-                    <div className="flex gap-4 mb-6">
-                        <div className="w-10 h-10 bg-purple-600 rounded-full flex items-center justify-center text-white font-bold text-sm shrink-0">U</div>
-                        <input
-                            type="text"
-                            placeholder="Add a comment..."
-                            className="w-full bg-transparent border-b border-[#3F3F3F] focus:border-white focus:outline-none pb-1 text-sm text-white placeholder-gray-400"
-                        />
+                    {/* Add Comment Form */}
+                    <form onSubmit={handleComment} className="flex gap-4 mb-8">
+                        {currentUser ? (
+                            <img src={currentUser.photoURL} alt="User" className="w-10 h-10 rounded-full object-cover" />
+                        ) : (
+                            <div className="w-10 h-10 bg-gray-700 rounded-full flex items-center justify-center text-white text-xs">?</div>
+                        )}
+                        <div className="flex-1">
+                            <input
+                                type="text"
+                                placeholder="Add a comment..."
+                                value={newComment}
+                                onChange={(e) => setNewComment(e.target.value)}
+                                className="w-full bg-transparent border-b border-[#3F3F3F] focus:border-white focus:outline-none pb-1 text-sm text-white placeholder-gray-400"
+                            />
+                            {newComment && (
+                                <div className="flex justify-end gap-2 mt-2">
+                                    <button
+                                        type="button"
+                                        onClick={() => setNewComment("")}
+                                        className="text-gray-400 text-sm hover:text-white px-3 py-1.5"
+                                    >
+                                        Cancel
+                                    </button>
+                                    <button
+                                        type="submit"
+                                        className="bg-blue-600 text-black px-4 py-1.5 rounded-full text-sm font-medium hover:bg-blue-700 text-white"
+                                    >
+                                        Comment
+                                    </button>
+                                </div>
+                            )}
+                        </div>
+                    </form>
+
+                    {/* Comments List */}
+                    <div className="flex flex-col gap-6">
+                        {comments.map((comment) => (
+                            <div key={comment.id} className="flex gap-4">
+                                <img
+                                    src={comment.userPhoto || `https://api.dicebear.com/7.x/avataaars/svg?seed=${comment.userName}`}
+                                    alt={comment.userName}
+                                    className="w-10 h-10 rounded-full object-cover cursor-pointer"
+                                />
+                                <div>
+                                    <div className="flex items-center gap-2 mb-1">
+                                        <h4 className="font-bold text-xs text-white">{comment.userName}</h4>
+                                        <span className="text-xs text-gray-400">
+                                            {comment.timestamp?.seconds ? new Date(comment.timestamp.seconds * 1000).toLocaleDateString() : 'Just now'}
+                                        </span>
+                                    </div>
+                                    <p className="text-sm text-gray-200">{comment.text}</p>
+                                </div>
+                            </div>
+                        ))}
                     </div>
                 </div>
             </div>

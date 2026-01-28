@@ -1,5 +1,7 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { updateProfile } from 'firebase/auth';
+import { doc, setDoc, getDoc } from 'firebase/firestore';
+import { db } from '../firebase';
 import { useAuth } from '../context/AuthContext';
 import { X } from 'lucide-react';
 
@@ -7,7 +9,20 @@ const EditChannelModal = ({ isOpen, onClose }) => {
     const { currentUser } = useAuth();
     const [name, setName] = useState(currentUser?.displayName || '');
     const [photoURL, setPhotoURL] = useState(currentUser?.photoURL || '');
+    const [description, setDescription] = useState('');
     const [loading, setLoading] = useState(false);
+
+    useEffect(() => {
+        if (isOpen && currentUser) {
+            const fetchUserData = async () => {
+                const userDoc = await getDoc(doc(db, "users", currentUser.uid));
+                if (userDoc.exists()) {
+                    setDescription(userDoc.data().description || '');
+                }
+            };
+            fetchUserData();
+        }
+    }, [isOpen, currentUser]);
 
     if (!isOpen) return null;
 
@@ -19,6 +34,14 @@ const EditChannelModal = ({ isOpen, onClose }) => {
                 displayName: name,
                 photoURL: photoURL
             });
+
+            // Save additional data to Firestore
+            await setDoc(doc(db, "users", currentUser.uid), {
+                displayName: name,
+                photoURL: photoURL,
+                description: description
+            }, { merge: true });
+
             alert("Channel updated successfully! Refresh to see changes.");
             onClose();
         } catch (error) {
@@ -63,6 +86,17 @@ const EditChannelModal = ({ isOpen, onClose }) => {
                             placeholder="https://..."
                         />
                         <p className="text-xs text-gray-500 mt-1">Paste a direct link to an image.</p>
+                    </div>
+
+                    <div>
+                        <label className="text-sm text-gray-400 mb-1 block">Description</label>
+                        <textarea
+                            value={description}
+                            onChange={(e) => setDescription(e.target.value)}
+                            className="w-full bg-[#0F0F0F] border border-[#303030] rounded-lg px-4 py-2 text-white focus:outline-none focus:border-blue-500 min-h-[100px]"
+                            placeholder="Tell viewers about your channel..."
+                        />
+                        <p className="text-xs text-gray-500 mt-1">Links added here will be clickable on your channel page.</p>
                     </div>
 
                     <div className="flex justify-end gap-3 mt-4">
