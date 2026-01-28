@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { db } from '../firebase';
+import { useAuth } from '../context/AuthContext';
 import { doc, getDoc, setDoc } from "firebase/firestore";
 import { updateProfile } from 'firebase/auth';
 import { Upload, User, Image as ImageIcon, Layout, Info } from 'lucide-react';
