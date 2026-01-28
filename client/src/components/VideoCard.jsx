@@ -64,7 +64,7 @@ const VideoCard = ({ video }) => {
                     </div>
 
                     {/* Info */}
-                    <div className="flex gap-3 items-start px-3 md:px-0.5 mt-2 md:mt-0">
+                    <div className="flex gap-2 items-start px-2 md:px-0.5 mt-2 md:mt-0">
                         <div className="w-9 h-9 min-w-[36px] rounded-full overflow-hidden bg-gray-600 shrink-0">
                             {/* Avatar Placeholder */}
                             <img src={`https://api.dicebear.com/7.x/avataaars/svg?seed=${video.uploader}`} alt={video.uploader} />

@@ -35,7 +35,7 @@ const Home = () => {
     return (
         <div className="w-full h-full pt-4">
             {/* Category Pills */}
-            <div className="flex gap-3 overflow-x-auto pb-4 px-4 sticky top-14 bg-[#0F0F0F] z-30 no-scrollbar">
+            <div className="flex gap-3 overflow-x-auto pb-4 px-4 sticky top-14 bg-[#0F0F0F] z-30 scrollbar-hide whitespace-nowrap">
                 {CATEGORIES.map((category) => (
                     <button
                         key={category}
