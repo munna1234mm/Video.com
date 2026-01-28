@@ -64,35 +64,34 @@ const VideoCard = ({ video }) => {
                     </div>
 
                     {/* Info */}
-                    <div className="flex gap-3 items-start px-5 md:px-0.5 mt-2 md:mt-0">
-                        <div className="w-9 h-9 min-w-[36px] rounded-full overflow-hidden bg-gray-600">
+                    <div className="flex gap-3 items-start px-3 md:px-0.5 mt-2 md:mt-0">
+                        <div className="w-9 h-9 min-w-[36px] rounded-full overflow-hidden bg-gray-600 shrink-0">
                             {/* Avatar Placeholder */}
                             <img src={`https://api.dicebear.com/7.x/avataaars/svg?seed=${video.uploader}`} alt={video.uploader} />
                         </div>
-                        <div className="flex flex-col w-full overflow-hidden">
-                            <div className="flex justify-between items-start gap-1">
-                                <h3 className="text-white font-medium text-sm md:text-sm line-clamp-2 leading-tight group-hover:text-blue-400 transition-colors">
-                                    {video.title}
-                                </h3>
-                                {/* Three Dot Menu Toggle */}
-                                <button
-                                    onClick={(e) => { e.preventDefault(); e.stopPropagation(); setIsMenuOpen(!isMenuOpen); }}
-                                    className={`shrink-0 p-1 rounded-full transition-all ${isMenuOpen ? 'bg-[#272727]' : 'opacity-100 md:opacity-0 group-hover:opacity-100'}`}
-                                >
-                                    <MoreVertical className="text-white w-5 h-5 md:w-4 md:h-4" />
-                                </button>
-                            </div>
-                            <div className="text-[#AAAAAA] text-xs mt-0.5 flex items-center gap-1">
-                                <Link to={`/channel/${video.userId}`} className="hover:text-white transition-colors truncate">
+                        <div className="flex flex-col flex-1 overflow-hidden min-w-0">
+                            <h3 className="text-white font-medium text-sm md:text-sm line-clamp-2 leading-tight group-hover:text-blue-400 transition-colors">
+                                {video.title}
+                            </h3>
+                            <div className="text-[#AAAAAA] text-xs mt-0.5 flex items-center gap-1 flex-wrap">
+                                <Link to={`/channel/${video.userId}`} className="hover:text-white transition-colors truncate max-w-[150px]">
                                     {video.uploader}
                                 </Link>
-                                <CheckCircle className="w-3 h-3 fill-[#AAAAAA] text-black" />
+                                <CheckCircle className="w-3 h-3 fill-[#AAAAAA] text-black shrink-0" />
                                 <span>•</span>
                                 <span>{video.views}</span>
                                 <span>•</span>
                                 <span>{formatTimeAgo(video.uploadDate)}</span>
                             </div>
                         </div>
+
+                        {/* Three Dot Menu Toggle - Moved to Right Edge */}
+                        <button
+                            onClick={(e) => { e.preventDefault(); e.stopPropagation(); setIsMenuOpen(!isMenuOpen); }}
+                            className={`shrink-0 p-1 -mr-2 rounded-full transition-all ${isMenuOpen ? 'bg-[#272727]' : 'opacity-100 md:opacity-0 group-hover:opacity-100'}`}
+                        >
+                            <MoreVertical className="text-white w-5 h-5 md:w-4 md:h-4" />
+                        </button>
                     </div>
                 </div>
             </Link>
