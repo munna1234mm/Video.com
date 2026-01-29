@@ -139,6 +139,33 @@ const Content = () => {
         }
     };
 
+    const handleLoadSamples = async () => {
+        if (!currentUser) return;
+        setLoading(true);
+        try {
+            const promises = sampleVideos.map(async (v) => {
+                return addDoc(collection(db, "videos"), {
+                    ...v,
+                    userId: currentUser.uid,
+                    uploader: currentUser.displayName || 'Creator',
+                    uploadDate: serverTimestamp(),
+                    views: Math.floor(Math.random() * 10000),
+                    likes: Math.floor(Math.random() * 1000),
+                    dislikes: Math.floor(Math.random() * 100),
+                    comments: []
+                });
+            });
+            await Promise.all(promises);
+            addToast("Sample videos loaded successfully", "success");
+            fetchVideos();
+        } catch (error) {
+            console.error("Load samples error:", error);
+            addToast("Failed to load sample videos", "error");
+        } finally {
+            setLoading(false);
+        }
+    };
+
     const formatDate = (timestamp) => {
         if (!timestamp) return 'Unknown';
         // Handle Firestore Timestamp or standard Date
@@ -152,7 +179,18 @@ const Content = () => {
             <div className="flex-1 flex flex-col overflow-hidden">
                 {/* Header/Tabs */}
                 <header className="pt-6 px-8 border-b border-slate-200 dark:border-[#326744]">
-                    <h2 className="text-2xl font-bold mb-4">Channel content</h2>
+                    <div className="flex justify-between items-center mb-4">
+                        <h2 className="text-2xl font-bold">Channel content</h2>
+                        {!loading && videos.length > 0 && (
+                            <Link
+                                to="/upload"
+                                className="bg-[#13ec5b] text-[#102216] px-4 py-2 rounded-lg font-bold text-sm hover:bg-[#13ec5b]/90 transition-colors flex items-center gap-2"
+                            >
+                                <span className="material-symbols-outlined text-lg">videocam</span>
+                                <span>Create</span>
+                            </Link>
+                        )}
+                    </div>
                     <div className="flex gap-8 overflow-x-auto no-scrollbar">
                         {['Videos', 'Live', 'Posts', 'Playlists', 'Podcasts'].map(tab => (
                             <button
@@ -189,259 +227,233 @@ const Content = () => {
                                         <span className="material-symbols-outlined text-sm">delete</span>
                                         <span>Delete forever</span>
                                     </button>
-                                    <button className="flex items-center gap-2 px-3 py-1.5 rounded bg-[#102216]/10 text-[#102216] text-xs font-bold hover:bg-[#102216]/20 transition-all whitespace-nowrap">
-                                        <span className="material-symbols-outlined text-sm">playlist_add</span>
-                                        <span>Add to playlist</span>
-                                    </button>
-                                    <button className="flex items-center gap-2 px-3 py-1.5 rounded bg-[#102216]/10 text-[#102216] text-xs font-bold hover:bg-[#102216]/20 transition-all whitespace-nowrap">
-                                        <span>More actions</span>
-                                        <span className="material-symbols-outlined text-sm">arrow_drop_down</span>
-                                    </button>
                                 </div>
                             </div>
                         </div>
                     </div>
                 )}
 
-                {/* Table Controls (Search filter) */}
-                <div className="px-8 py-4 flex items-center gap-4">
-                    <div className="flex-1 max-w-md">
-                        <label className="relative block">
-                            <span className="absolute inset-y-0 left-0 flex items-center pl-3 text-slate-400 dark:text-[#92c9a4]">
-                                <span className="material-symbols-outlined text-lg">search</span>
-                            </span>
-                            <input
-                                className="block w-full bg-slate-100 dark:bg-[#23482f] border-none rounded-lg py-2 pl-10 pr-3 placeholder-slate-500 dark:placeholder-[#92c9a4] text-sm focus:ring-1 focus:ring-[#13ec5b] focus:bg-white dark:focus:bg-[#23482f] text-slate-900 dark:text-white"
-                                placeholder="Filter videos by title..."
-                                type="text"
-                                onChange={(e) => {
-                                    // Simple client-side search for now
-                                    const term = e.target.value.toLowerCase();
-                                    if (!term) return; // Need to refresh original list or keep filtered state. 
-                                    // For simplicity sake, real implementation would fetch or filter active state
-                                }}
-                            />
-                        </label>
-                    </div>
-                    <button className="flex items-center gap-2 px-3 py-2 rounded-lg bg-slate-100 dark:bg-[#23482f] text-slate-700 dark:text-white text-sm font-medium hover:bg-slate-200 dark:hover:bg-[#2d5c3c] transition-colors">
-                        <span className="material-symbols-outlined text-lg">filter_list</span>
-                        <span>Filter</span>
-                    </button>
-                </div>
+                {/* Main Viewport */}
+                <div className="flex-1 overflow-hidden flex flex-col">
+                    {loading ? (
+                        <div className="flex-1 flex flex-col items-center justify-center gap-4">
+                            <div className="w-12 h-12 border-4 border-[#13ec5b] border-t-transparent rounded-full animate-spin"></div>
+                            <p className="text-slate-500 dark:text-[#92c9a4] font-medium">Fetching your content...</p>
+                        </div>
+                    ) : videos.length === 0 ? (
+                        <div className="flex-1 flex flex-col items-center justify-center p-8 text-center max-w-2xl mx-auto">
+                            <div className="w-64 h-64 mb-8 relative">
+                                <div className="absolute inset-0 bg-[#13ec5b]/10 rounded-full animate-pulse"></div>
+                                <div className="absolute inset-4 bg-[#13ec5b]/20 rounded-full animate-pulse delay-75"></div>
+                                <div className="absolute inset-0 flex items-center justify-center">
+                                    <span className="material-symbols-outlined text-8xl text-[#13ec5b] drop-shadow-[0_0_15px_rgba(19,236,91,0.5)]">
+                                        video_library
+                                    </span>
+                                </div>
+                            </div>
+                            <h3 className="text-3xl font-black mb-4 tracking-tight">Your video journey starts here</h3>
+                            <p className="text-slate-500 dark:text-[#92c9a4] text-lg mb-10 max-w-md">
+                                Upload your first video to get started. Or, load some sample data to see how your channel will look.
+                            </p>
+                            <div className="flex flex-col sm:flex-row gap-4 w-full sm:w-auto">
+                                <Link
+                                    to="/upload"
+                                    className="bg-[#13ec5b] text-[#102216] px-10 py-4 rounded-xl font-black text-lg hover:bg-[#13ec5b]/90 transition-all shadow-xl shadow-[#13ec5b]/20 flex items-center justify-center gap-3"
+                                >
+                                    <span className="material-symbols-outlined font-bold">upload</span>
+                                    <span>Upload Video</span>
+                                </Link>
+                                <button
+                                    onClick={handleLoadSamples}
+                                    className="bg-white/5 dark:bg-[#23482f]/50 border border-slate-200 dark:border-[#326744] text-slate-900 dark:text-white px-10 py-4 rounded-xl font-bold text-lg hover:bg-slate-100 dark:hover:bg-[#23482f]/70 transition-all flex items-center justify-center gap-3"
+                                >
+                                    <span className="material-symbols-outlined">dataset</span>
+                                    <span>Load Samples</span>
+                                </button>
+                            </div>
+                        </div>
+                    ) : (
+                        <>
+                            {/* Table Controls (Search filter) */}
+                            <div className="px-8 py-4 flex items-center gap-4">
+                                <div className="flex-1 max-w-md">
+                                    <label className="relative block">
+                                        <span className="absolute inset-y-0 left-0 flex items-center pl-3 text-slate-400 dark:text-[#92c9a4]">
+                                            <span className="material-symbols-outlined text-lg">search</span>
+                                        </span>
+                                        <input
+                                            className="block w-full bg-slate-100 dark:bg-[#23482f] border-none rounded-lg py-2 pl-10 pr-3 placeholder-slate-500 dark:placeholder-[#92c9a4] text-sm focus:ring-1 focus:ring-[#13ec5b] focus:bg-white dark:focus:bg-[#23482f] text-slate-900 dark:text-white"
+                                            placeholder="Filter videos by title..."
+                                            type="text"
+                                        />
+                                    </label>
+                                </div>
+                                <button className="flex items-center gap-2 px-3 py-2 rounded-lg bg-slate-100 dark:bg-[#23482f] text-slate-700 dark:text-white text-sm font-medium hover:bg-slate-200 dark:hover:bg-[#2d5c3c] transition-colors">
+                                    <span className="material-symbols-outlined text-lg">filter_list</span>
+                                    <span>Filter</span>
+                                </button>
+                            </div>
 
-                {/* Table Content */}
-                <div className="flex-1 overflow-auto px-8 pb-8">
-                    <div className="min-w-full inline-block align-middle">
-                        <div className="overflow-hidden border border-slate-200 dark:border-[#326744] rounded-xl bg-white dark:bg-[#15291c]">
-                            <table className="min-w-full divide-y divide-slate-200 dark:divide-[#326744]">
-                                <thead className="bg-slate-50 dark:bg-[#193322]">
-                                    <tr>
-                                        <th className="px-4 py-3 w-12 text-center" scope="col">
-                                            <input
-                                                type="checkbox"
-                                                className="rounded border-slate-300 dark:border-[#326744] bg-transparent text-[#13ec5b] focus:ring-[#13ec5b] size-4"
-                                                checked={videos.length > 0 && selectedVideos.length === videos.length}
-                                                onChange={handleSelectAll}
-                                            />
-                                        </th>
-                                        <th className="px-4 py-3 text-left text-xs font-semibold text-slate-500 dark:text-slate-300 uppercase tracking-wider" scope="col">Video</th>
-                                        <th className="px-4 py-3 text-left text-xs font-semibold text-slate-500 dark:text-slate-300 uppercase tracking-wider hidden sm:table-cell" scope="col">Visibility</th>
-                                        <th className="px-4 py-3 text-left text-xs font-semibold text-slate-500 dark:text-slate-300 uppercase tracking-wider hidden md:table-cell" scope="col">Date</th>
-                                        <th className="px-4 py-3 text-left text-xs font-semibold text-slate-500 dark:text-slate-300 uppercase tracking-wider text-right hidden lg:table-cell" scope="col">Views</th>
-                                        <th className="px-4 py-3 text-left text-xs font-semibold text-slate-500 dark:text-slate-300 uppercase tracking-wider text-right hidden lg:table-cell" scope="col">Comments</th>
-                                        <th className="px-4 py-3 text-left text-xs font-semibold text-slate-500 dark:text-slate-300 uppercase tracking-wider hidden lg:table-cell" scope="col">Likes (vs Dislikes)</th>
-                                    </tr>
-                                </thead>
-                                <tbody className="divide-y divide-slate-200 dark:divide-[#326744]">
-                                    {loading ? (
-                                        <tr><td colSpan="7" className="p-8 text-center text-slate-500">Loading content...</td></tr>
-                                    ) : error ? (
-                                        <tr>
-                                            <td colSpan="7" className="p-12 text-center">
-                                                <div className="flex flex-col items-center justify-center gap-4">
-                                                    <div className="w-16 h-16 bg-red-500/10 rounded-full flex items-center justify-center">
-                                                        <span className="material-symbols-outlined text-3xl text-red-500">wifi_off</span>
-                                                    </div>
-                                                    <div className="space-y-1">
-                                                        <p className="text-slate-900 dark:text-white font-medium">Something went wrong</p>
-                                                        <p className="text-slate-500 dark:text-[#92c9a4] text-sm max-w-xs mx-auto">
-                                                            {error}
-                                                        </p>
-                                                    </div>
-                                                    <button
-                                                        onClick={fetchVideos}
-                                                        className="mt-2 bg-[#272727] text-white px-6 py-2 rounded-lg font-bold text-sm hover:bg-[#3F3F3F] transition-colors"
+                            {/* Table Content */}
+                            <div className="flex-1 overflow-auto px-8 pb-8">
+                                <div className="min-w-full inline-block align-middle">
+                                    <div className="overflow-hidden border border-slate-200 dark:border-[#326744] rounded-xl bg-white dark:bg-[#15291c]">
+                                        <table className="min-w-full divide-y divide-slate-200 dark:divide-[#326744]">
+                                            <thead className="bg-slate-50 dark:bg-[#193322]">
+                                                <tr>
+                                                    <th className="px-4 py-3 w-12 text-center" scope="col">
+                                                        <input
+                                                            type="checkbox"
+                                                            className="rounded border-slate-300 dark:border-[#326744] bg-transparent text-[#13ec5b] focus:ring-[#13ec5b] size-4"
+                                                            checked={videos.length > 0 && selectedVideos.length === videos.length}
+                                                            onChange={handleSelectAll}
+                                                        />
+                                                    </th>
+                                                    <th className="px-4 py-3 text-left text-xs font-semibold text-slate-500 dark:text-slate-300 uppercase tracking-wider" scope="col">Video</th>
+                                                    <th className="px-4 py-3 text-left text-xs font-semibold text-slate-500 dark:text-slate-300 uppercase tracking-wider hidden sm:table-cell" scope="col">Visibility</th>
+                                                    <th className="px-4 py-3 text-left text-xs font-semibold text-slate-500 dark:text-slate-300 uppercase tracking-wider hidden md:table-cell" scope="col">Date</th>
+                                                    <th className="px-4 py-3 text-left text-xs font-semibold text-slate-500 dark:text-slate-300 uppercase tracking-wider text-right hidden lg:table-cell" scope="col">Views</th>
+                                                    <th className="px-4 py-3 text-left text-xs font-semibold text-slate-500 dark:text-slate-300 uppercase tracking-wider text-right hidden lg:table-cell" scope="col">Comments</th>
+                                                    <th className="px-4 py-3 text-left text-xs font-semibold text-slate-500 dark:text-slate-300 uppercase tracking-wider hidden lg:table-cell" scope="col">Likes (vs Dislikes)</th>
+                                                </tr>
+                                            </thead>
+                                            <tbody className="divide-y divide-slate-200 dark:divide-[#326744]">
+                                                {videos.map(video => (
+                                                    <tr
+                                                        key={video.id}
+                                                        className={`group transition-colors ${selectedVideos.includes(video.id) ? 'bg-[#23482f]/30 hover:bg-[#23482f]/50' : 'hover:bg-slate-50 dark:hover:bg-[#193322]'}`}
                                                     >
-                                                        Retry
-                                                    </button>
-                                                </div>
-                                            </td>
-                                        </tr>
-                                    ) : videos.length === 0 ? (
-                                        <tr>
-                                            <td colSpan="7" className="p-12 text-center">
-                                                <div className="flex flex-col items-center justify-center gap-4">
-                                                    <div className="w-16 h-16 bg-slate-100 dark:bg-[#193322] rounded-full flex items-center justify-center">
-                                                        <span className="material-symbols-outlined text-3xl text-slate-400 dark:text-[#92c9a4]">video_library</span>
-                                                    </div>
-                                                    <div className="space-y-1">
-                                                        <p className="text-slate-900 dark:text-white font-medium">No videos found</p>
-                                                        <p className="text-slate-500 dark:text-[#92c9a4] text-sm max-w-xs mx-auto">
-                                                            Upload a video to get started with your channel.
-                                                        </p>
-                                                    </div>
-                                                    <div className="flex gap-4 mt-4">
-                                                        <Link
-                                                            to="/upload"
-                                                            className="bg-[#13ec5b] text-[#102216] px-6 py-2 rounded-lg font-bold text-sm hover:bg-[#13ec5b]/90 transition-colors"
-                                                        >
-                                                            Upload Video
-                                                        </Link>
-                                                        <button
-                                                            onClick={handleLoadSamples}
-                                                            className="bg-[#272727] text-white px-6 py-2 rounded-lg font-bold text-sm hover:bg-[#3F3F3F] transition-colors"
-                                                        >
-                                                            Load Sample Data
-                                                        </button>
-                                                    </div>
-                                                </div>
-                                            </td>
-                                        </tr>
-                                    ) : (
-                                        videos.map(video => (
-                                            <tr
-                                                key={video.id}
-                                                className={`group transition-colors ${selectedVideos.includes(video.id) ? 'bg-[#23482f]/30 hover:bg-[#23482f]/50' : 'hover:bg-slate-50 dark:hover:bg-[#193322]'}`}
-                                            >
-                                                <td className="px-4 py-4 text-center whitespace-nowrap">
-                                                    <input
-                                                        type="checkbox"
-                                                        className="rounded border-slate-300 dark:border-[#326744] bg-transparent text-[#13ec5b] focus:ring-[#13ec5b] size-4"
-                                                        checked={selectedVideos.includes(video.id)}
-                                                        onChange={() => handleSelectOne(video.id)}
-                                                    />
-                                                </td>
-                                                <td className="px-4 py-4 min-w-[300px]">
-                                                    <div className="flex gap-4">
-                                                        <div className="relative w-32 h-20 bg-slate-200 dark:bg-slate-800 rounded overflow-hidden flex-shrink-0 group-hover:opacity-90 transition-opacity">
-                                                            {video.thumbnailUrl ? (
-                                                                <img className="w-full h-full object-cover" src={video.thumbnailUrl} alt={video.title} />
-                                                            ) : (
-                                                                <div className="w-full h-full flex items-center justify-center bg-gray-800 text-xs text-gray-500">No Thumb</div>
-                                                            )}
-                                                            <span className="absolute bottom-1 right-1 bg-black/80 text-white text-[10px] font-bold px-1 rounded-sm">
-                                                                {video.duration || '00:00'}
-                                                            </span>
+                                                        <td className="px-4 py-4 text-center whitespace-nowrap">
+                                                            <input
+                                                                type="checkbox"
+                                                                className="rounded border-slate-300 dark:border-[#326744] bg-transparent text-[#13ec5b] focus:ring-[#13ec5b] size-4"
+                                                                checked={selectedVideos.includes(video.id)}
+                                                                onChange={() => handleSelectOne(video.id)}
+                                                            />
+                                                        </td>
+                                                        <td className="px-4 py-4 min-w-[300px]">
+                                                            <div className="flex gap-4">
+                                                                <div className="relative w-32 h-20 bg-slate-200 dark:bg-slate-800 rounded overflow-hidden flex-shrink-0 group-hover:opacity-90 transition-opacity">
+                                                                    {video.thumbnailUrl ? (
+                                                                        <img className="w-full h-full object-cover" src={video.thumbnailUrl} alt={video.title} />
+                                                                    ) : (
+                                                                        <div className="w-full h-full flex items-center justify-center bg-gray-800 text-xs text-gray-500">No Thumb</div>
+                                                                    )}
+                                                                    <span className="absolute bottom-1 right-1 bg-black/80 text-white text-[10px] font-bold px-1 rounded-sm">
+                                                                        {video.duration || '00:00'}
+                                                                    </span>
 
-                                                            {/* Quick Actions Overlay */}
-                                                            <div className="absolute inset-0 bg-[#102216]/80 backdrop-blur-sm opacity-0 group-hover:opacity-100 flex items-center justify-center gap-2 transition-opacity duration-200">
-                                                                <button
-                                                                    onClick={() => setEditingVideo(video)}
-                                                                    className="p-1.5 rounded-full hover:bg-white/20 text-white"
-                                                                    title="Edit details"
-                                                                >
-                                                                    <span className="material-symbols-outlined text-lg">edit</span>
-                                                                </button>
-                                                                <Link to={`/video/${video.id}`} className="p-1.5 rounded-full hover:bg-white/20 text-white" title="View on YouTube">
-                                                                    <span className="material-symbols-outlined text-lg">play_arrow</span>
-                                                                </Link>
-                                                                <button
-                                                                    onClick={() => handleDelete([video.id])}
-                                                                    className="p-1.5 rounded-full hover:bg-white/20 text-white hover:text-red-400"
-                                                                    title="Delete"
-                                                                >
-                                                                    <span className="material-symbols-outlined text-lg">delete</span>
-                                                                </button>
+                                                                    {/* Quick Actions Overlay */}
+                                                                    <div className="absolute inset-0 bg-[#102216]/80 backdrop-blur-sm opacity-0 group-hover:opacity-100 flex items-center justify-center gap-2 transition-opacity duration-200">
+                                                                        <button
+                                                                            onClick={() => setEditingVideo(video)}
+                                                                            className="p-1.5 rounded-full hover:bg-white/20 text-white"
+                                                                            title="Edit details"
+                                                                        >
+                                                                            <span className="material-symbols-outlined text-lg">edit</span>
+                                                                        </button>
+                                                                        <Link to={`/video/${video.id}`} className="p-1.5 rounded-full hover:bg-white/20 text-white" title="View on YouTube">
+                                                                            <span className="material-symbols-outlined text-lg">play_arrow</span>
+                                                                        </Link>
+                                                                        <button
+                                                                            onClick={() => handleDelete([video.id])}
+                                                                            className="p-1.5 rounded-full hover:bg-white/20 text-white hover:text-red-400"
+                                                                            title="Delete"
+                                                                        >
+                                                                            <span className="material-symbols-outlined text-lg">delete</span>
+                                                                        </button>
+                                                                    </div>
+                                                                </div>
+                                                                <div className="flex flex-col gap-1 min-w-0 py-1">
+                                                                    <div className="flex items-center gap-2 group/title">
+                                                                        <Link to={`/video/${video.id}`} className="text-sm font-semibold text-slate-900 dark:text-white truncate max-w-[200px] hover:underline">
+                                                                            {video.title}
+                                                                        </Link>
+                                                                        <button
+                                                                            onClick={() => setEditingVideo(video)}
+                                                                            className="opacity-0 group-hover/title:opacity-100 text-gray-400 hover:text-white transition-opacity"
+                                                                        >
+                                                                            <span className="material-symbols-outlined text-sm">edit</span>
+                                                                        </button>
+                                                                    </div>
+                                                                    <p className="text-xs text-slate-500 dark:text-[#92c9a4] line-clamp-2 max-w-[200px]">
+                                                                        {video.description || 'No description'}
+                                                                    </p>
+                                                                </div>
                                                             </div>
-                                                        </div>
-                                                        <div className="flex flex-col gap-1 min-w-0 py-1">
-                                                            <div className="flex items-center gap-2 group/title">
-                                                                <Link to={`/video/${video.id}`} className="text-sm font-semibold text-slate-900 dark:text-white truncate max-w-[200px] hover:underline">
-                                                                    {video.title}
-                                                                </Link>
-                                                                <button
-                                                                    onClick={() => setEditingVideo(video)}
-                                                                    className="opacity-0 group-hover/title:opacity-100 text-gray-400 hover:text-white transition-opacity"
-                                                                >
-                                                                    <span className="material-symbols-outlined text-sm">edit</span>
-                                                                </button>
+                                                        </td>
+                                                        <td className="px-4 py-4 whitespace-nowrap hidden sm:table-cell">
+                                                            <div className="flex items-center gap-2 text-xs font-medium text-slate-700 dark:text-slate-200">
+                                                                {video.visibility === 'public' ? (
+                                                                    <span className="material-symbols-outlined text-[#13ec5b] text-sm">visibility</span>
+                                                                ) : (
+                                                                    <span className="material-symbols-outlined text-slate-400 text-sm">visibility_off</span>
+                                                                )}
+                                                                <span className="capitalize">{video.visibility || 'Public'}</span>
                                                             </div>
-                                                            <p className="text-xs text-slate-500 dark:text-[#92c9a4] line-clamp-2 max-w-[200px]">
-                                                                {video.description || 'No description'}
-                                                            </p>
-                                                        </div>
-                                                    </div>
-                                                </td>
-                                                <td className="px-4 py-4 whitespace-nowrap hidden sm:table-cell">
-                                                    <div className="flex items-center gap-2 text-xs font-medium text-slate-700 dark:text-slate-200">
-                                                        {video.visibility === 'public' ? (
-                                                            <span className="material-symbols-outlined text-[#13ec5b] text-sm">visibility</span>
-                                                        ) : (
-                                                            <span className="material-symbols-outlined text-slate-400 text-sm">visibility_off</span>
-                                                        )}
-                                                        <span className="capitalize">{video.visibility || 'Public'}</span>
-                                                    </div>
-                                                </td>
-                                                <td className="px-4 py-4 whitespace-nowrap text-xs text-slate-500 dark:text-[#92c9a4] hidden md:table-cell">
-                                                    {formatDate(video.uploadDate)}
-                                                    <br />
-                                                    <span className="text-[10px]">Published</span>
-                                                </td>
-                                                <td className="px-4 py-4 whitespace-nowrap text-xs text-slate-700 dark:text-white font-medium text-right hidden lg:table-cell">
-                                                    {video.views?.toLocaleString() || 0}
-                                                </td>
-                                                <td className="px-4 py-4 whitespace-nowrap text-xs text-slate-700 dark:text-white font-medium text-right hidden lg:table-cell">
-                                                    {video.comments?.length || 0}
-                                                </td>
-                                                <td className="px-4 py-4 whitespace-nowrap hidden lg:table-cell">
-                                                    <div className="flex flex-col gap-1">
-                                                        <div className="flex justify-between text-[10px] text-slate-500 dark:text-[#92c9a4]">
-                                                            <span>
-                                                                {video.likes + video.dislikes > 0
-                                                                    ? Math.round((video.likes / (video.likes + video.dislikes)) * 100)
-                                                                    : 0}%
-                                                            </span>
-                                                            <span>({video.likes} likes)</span>
-                                                        </div>
-                                                        <div className="w-24 h-1 bg-slate-200 dark:bg-[#326744] rounded-full overflow-hidden">
-                                                            <div
-                                                                className="h-full bg-[#13ec5b]"
-                                                                style={{ width: `${video.likes + video.dislikes > 0 ? (video.likes / (video.likes + video.dislikes)) * 100 : 0}%` }}
-                                                            ></div>
-                                                        </div>
-                                                    </div>
-                                                </td>
-                                            </tr>
-                                        ))
-                                    )}
-                                </tbody>
-                            </table>
-                        </div>
-                    </div>
+                                                        </td>
+                                                        <td className="px-4 py-4 whitespace-nowrap text-xs text-slate-500 dark:text-[#92c9a4] hidden md:table-cell">
+                                                            {formatDate(video.uploadDate)}
+                                                            <br />
+                                                            <span className="text-[10px]">Published</span>
+                                                        </td>
+                                                        <td className="px-4 py-4 whitespace-nowrap text-xs text-slate-700 dark:text-white font-medium text-right hidden lg:table-cell">
+                                                            {video.views?.toLocaleString() || 0}
+                                                        </td>
+                                                        <td className="px-4 py-4 whitespace-nowrap text-xs text-slate-700 dark:text-white font-medium text-right hidden lg:table-cell">
+                                                            {video.comments?.length || 0}
+                                                        </td>
+                                                        <td className="px-4 py-4 whitespace-nowrap hidden lg:table-cell">
+                                                            <div className="flex flex-col gap-1">
+                                                                <div className="flex justify-between text-[10px] text-slate-500 dark:text-[#92c9a4]">
+                                                                    <span>
+                                                                        {video.likes + video.dislikes > 0
+                                                                            ? Math.round((video.likes / (video.likes + video.dislikes)) * 100)
+                                                                            : 0}%
+                                                                    </span>
+                                                                    <span>({video.likes} likes)</span>
+                                                                </div>
+                                                                <div className="w-24 h-1 bg-slate-200 dark:bg-[#326744] rounded-full overflow-hidden">
+                                                                    <div
+                                                                        className="h-full bg-[#13ec5b]"
+                                                                        style={{ width: `${video.likes + video.dislikes > 0 ? (video.likes / (video.likes + video.dislikes)) * 100 : 0}%` }}
+                                                                    ></div>
+                                                                </div>
+                                                            </div>
+                                                        </td>
+                                                    </tr>
+                                                ))}
+                                            </tbody>
+                                        </table>
+                                    </div>
+                                </div>
+                            </div>
+
+                            {/* Footer Pagination */}
+                            <footer className="px-8 py-3 border-t border-slate-200 dark:border-[#326744] flex items-center justify-between bg-slate-50 dark:bg-[#102216]">
+                                <div className="flex items-center gap-4 text-xs text-slate-500 dark:text-[#92c9a4]">
+                                    <div className="flex items-center gap-2">
+                                        <span>Rows per page:</span>
+                                        <select className="bg-transparent border-none focus:ring-0 text-slate-900 dark:text-white py-0 pl-0 pr-6 text-xs font-medium cursor-pointer">
+                                            <option>10</option>
+                                            <option>30</option>
+                                            <option>50</option>
+                                        </select>
+                                    </div>
+                                    <span>1–{videos.length} of {videos.length}</span>
+                                </div>
+                                <div className="flex items-center gap-2">
+                                    <button className="p-1 rounded hover:bg-slate-200 dark:hover:bg-[#23482f] text-slate-400 disabled:opacity-30">
+                                        <span className="material-symbols-outlined">chevron_left</span>
+                                    </button>
+                                    <button className="p-1 rounded hover:bg-slate-200 dark:hover:bg-[#23482f] text-slate-400 disabled:opacity-30">
+                                        <span className="material-symbols-outlined">chevron_right</span>
+                                    </button>
+                                </div>
+                            </footer>
+                        </>
+                    )}
                 </div>
-
-                {/* Footer Pagination */}
-                <footer className="px-8 py-3 border-t border-slate-200 dark:border-[#326744] flex items-center justify-between bg-slate-50 dark:bg-[#102216]">
-                    <div className="flex items-center gap-4 text-xs text-slate-500 dark:text-[#92c9a4]">
-                        <div className="flex items-center gap-2">
-                            <span>Rows per page:</span>
-                            <select className="bg-transparent border-none focus:ring-0 text-slate-900 dark:text-white py-0 pl-0 pr-6 text-xs font-medium cursor-pointer">
-                                <option>10</option>
-                                <option>30</option>
-                                <option>50</option>
-                            </select>
-                        </div>
-                        <span>1–{videos.length} of {videos.length}</span>
-                    </div>
-                    <div className="flex items-center gap-2">
-                        <button className="p-1 rounded hover:bg-slate-200 dark:hover:bg-[#23482f] text-slate-400 disabled:opacity-30">
-                            <span className="material-symbols-outlined">chevron_left</span>
-                        </button>
-                        <button className="p-1 rounded hover:bg-slate-200 dark:hover:bg-[#23482f] text-slate-400 disabled:opacity-30">
-                            <span className="material-symbols-outlined">chevron_right</span>
-                        </button>
-                    </div>
-                </footer>
             </div>
 
             {/* Edit Modal */}

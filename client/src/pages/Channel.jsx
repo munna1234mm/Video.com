@@ -213,8 +213,14 @@ const Channel = () => {
                         ) : (
                             <div className="grid grid-cols-1 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-4 [&>*]:max-w-[350px] sm:[&>*]:max-w-none [&>*]:mx-auto sm:[&>*]:mx-0">
                                 {videos.length === 0 ? (
-                                    <div className="col-span-full text-center text-gray-500 py-10">
-                                        This channel has no videos yet.
+                                    <div className="col-span-full flex flex-col items-center justify-center py-20 px-4 text-center">
+                                        <div className="w-20 h-20 bg-[#272727] rounded-full flex items-center justify-center mb-4">
+                                            <span className="material-symbols-outlined text-4xl text-gray-500">video_library</span>
+                                        </div>
+                                        <h3 className="text-xl font-bold mb-2">No videos yet</h3>
+                                        <p className="text-gray-400 max-w-sm">
+                                            This channel hasn't uploaded any videos yet. Check back later for new content.
+                                        </p>
                                     </div>
                                 ) : (
                                     videos.map((video) => (
