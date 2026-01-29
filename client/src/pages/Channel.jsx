@@ -32,6 +32,10 @@ const Channel = () => {
     const isOwner = currentUser?.uid === uid;
 
     useEffect(() => {
+        if (!db) {
+            setLoading(false);
+            return;
+        }
         const fetchData = async () => {
             try {
                 // 1. Fetch Channel User Data (for Banner, Description, etc.)

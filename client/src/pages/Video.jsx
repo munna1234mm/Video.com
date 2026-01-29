@@ -12,7 +12,12 @@ const Video = () => {
     const [loading, setLoading] = useState(true);
 
     useEffect(() => {
+        if (!db) {
+            setLoading(false);
+            return;
+        }
         const fetchVideo = async () => {
+
             try {
                 const docRef = doc(db, "videos", id);
                 const docSnap = await getDoc(docRef);
@@ -48,8 +53,9 @@ const Video = () => {
     const [newComment, setNewComment] = useState("");
 
     useEffect(() => {
-        if (id) {
+        if (id && db) {
             const q = query(
+
                 collection(db, "videos", id, "comments"),
                 orderBy("timestamp", "desc")
             );

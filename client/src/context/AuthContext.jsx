@@ -71,7 +71,14 @@ export const AuthProvider = ({ children }) => {
                             <svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="#ef4444" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="10" /><line x1="12" x2="12" y1="8" y2="12" /><line x1="12" x2="12.01" y1="16" y2="16" /></svg>
                         </div>
                         <h2 className="text-xl font-bold">Configuration Error</h2>
-                        <p className="text-gray-400 max-w-md">The application failed to initialize because the Firebase configuration is missing or invalid.</p>
+                        <p className="text-gray-400 max-w-md">
+                            The application failed to connect to Firebase. This usually happens when <strong>Environment Variables</strong> are missing on Render.
+                        </p>
+                        <div className="bg-[#1A1A1A] p-4 rounded-xl text-left text-xs font-mono border border-red-500/30 w-full max-w-md">
+                            <p className="text-red-400 mb-2">// Diagnostic Info:</p>
+                            <p>API KEY: {import.meta.env.VITE_FIREBASE_API_KEY ? '✅ Present' : '❌ Missing'}</p>
+                            <p>PROJECT ID: {import.meta.env.VITE_FIREBASE_PROJECT_ID ? '✅ Present' : '❌ Missing'}</p>
+                        </div>
                         <button
                             onClick={() => window.location.reload()}
                             className="bg-white text-black px-6 py-2 rounded-full font-medium mt-2 hover:bg-gray-200 transition-colors"
@@ -80,6 +87,7 @@ export const AuthProvider = ({ children }) => {
                         </button>
                     </div>
                 </div>
+
             ) : (
                 children
             )}
