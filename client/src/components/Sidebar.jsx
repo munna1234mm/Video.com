@@ -43,6 +43,7 @@ const Sidebar = ({ isOpen, toggleSidebar }) => {
                     <h3 className="px-3 mb-2 text-lg font-bold">You</h3>
                     <div onClick={() => window.innerWidth < 768 && toggleSidebar()}>
                         <SidebarItem icon={Folder} label="Library" to="/library" />
+                        <SidebarItem icon={PlaySquare} label="Content" to="/studio/content" />
                         <SidebarItem icon={Clock} label="History" to="/history" />
                         <SidebarItem icon={Clock} label="Watch Later" to="/playlist/watch-later" />
                         <SidebarItem icon={ThumbsUp} label="Liked Videos" to="/playlist/liked" />

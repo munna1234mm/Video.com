@@ -15,6 +15,7 @@ import { AuthProvider } from './context/AuthContext';
 import ChannelCustomization from './pages/ChannelCustomization';
 import Monetization from './pages/Monetization';
 import PaymentSetup from './pages/PaymentSetup';
+import Content from './pages/Content';
 
 import { ToastProvider } from './context/ToastContext';
 import Simulation from './components/Simulation';
@@ -44,6 +45,7 @@ function App() {
                   <Route path="/upload" element={<Upload />} />
                   <Route path="/channel/:uid" element={<Channel />} />
                   <Route path="/studio/customization" element={<ChannelCustomization />} />
+                  <Route path="/studio/content" element={<Content />} />
                   <Route path="/history" element={<History />} />
                   <Route path="/playlist/liked" element={<LikedVideos />} />
                   <Route path="/playlist/watch-later" element={<WatchLater />} />
