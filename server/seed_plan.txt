@@ -1,0 +1,8 @@
+
+const admin = require("firebase-admin");
+const serviceAccount = require("./serviceAccountKey.json"); // You'll need to create this or mock it, but for now we'll assume auth works or allow unauth write if rules are open, 
+// BUT server-side admin SDK needs a key. 
+// ALTERNATIVELY, since I don't have the key, I should create a client-side seeder component.
+// WAIT: The user has a client-side app running. Providing a script they can run in console or a temporary component is better if they don't have serviceAccountKey.json.
+
+// Let's create a temporary client-side seeder.

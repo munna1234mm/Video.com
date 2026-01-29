@@ -1,9 +1,10 @@
 import React, { useState, useEffect } from 'react';
 import { db } from '../firebase';
-import { collection, query, where, getDocs, orderBy, doc, deleteDoc, updateDoc } from 'firebase/firestore';
+import { collection, query, where, getDocs, orderBy, doc, deleteDoc, updateDoc, addDoc, serverTimestamp } from 'firebase/firestore';
 import { useAuth } from '../context/AuthContext';
 import { useToast } from '../context/ToastContext';
 import { Link } from 'react-router-dom';
+import { sampleVideos } from '../utils/sampleData';
 
 const EditVideoModal = ({ isOpen, onClose, video, onSave }) => {
     const [title, setTitle] = useState(video?.title || '');
@@ -263,12 +264,20 @@ const Content = () => {
                                                             Upload a video to get started with your channel.
                                                         </p>
                                                     </div>
-                                                    <Link
-                                                        to="/upload"
-                                                        className="mt-2 bg-[#13ec5b] text-[#102216] px-6 py-2 rounded-lg font-bold text-sm hover:bg-[#13ec5b]/90 transition-colors"
-                                                    >
-                                                        Upload Video
-                                                    </Link>
+                                                    <div className="flex gap-4 mt-4">
+                                                        <Link
+                                                            to="/upload"
+                                                            className="bg-[#13ec5b] text-[#102216] px-6 py-2 rounded-lg font-bold text-sm hover:bg-[#13ec5b]/90 transition-colors"
+                                                        >
+                                                            Upload Video
+                                                        </Link>
+                                                        <button
+                                                            onClick={handleLoadSamples}
+                                                            className="bg-[#272727] text-white px-6 py-2 rounded-lg font-bold text-sm hover:bg-[#3F3F3F] transition-colors"
+                                                        >
+                                                            Load Sample Data
+                                                        </button>
+                                                    </div>
                                                 </div>
                                             </td>
                                         </tr>
