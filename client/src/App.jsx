@@ -9,6 +9,7 @@ import Channel from './pages/Channel';
 import History from './pages/History';
 import LikedVideos from './pages/LikedVideos';
 import WatchLater from './pages/WatchLater';
+import Subscriptions from './pages/Subscriptions';
 import { AuthProvider } from './context/AuthContext';
 
 import ChannelCustomization from './pages/ChannelCustomization';
@@ -44,6 +45,7 @@ function App() {
                   <Route path="/history" element={<History />} />
                   <Route path="/playlist/liked" element={<LikedVideos />} />
                   <Route path="/playlist/watch-later" element={<WatchLater />} />
+                  <Route path="/subscriptions" element={<Subscriptions />} />
                 </Routes>
               </main>
             </div>
