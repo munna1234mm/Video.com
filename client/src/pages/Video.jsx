@@ -6,6 +6,7 @@ import { doc, getDoc, setDoc, increment, deleteDoc, collection, addDoc, serverTi
 import { db } from '../firebase';
 import { useAuth } from '../context/AuthContext';
 import { useToast } from '../context/ToastContext';
+import ShareModal from '../components/ShareModal';
 
 const Video = () => {
     const { id } = useParams();
@@ -22,6 +23,7 @@ const Video = () => {
     const [saved, setSaved] = useState(false);
     const [subscribed, setSubscribed] = useState(false);
     const [subscriberCount, setSubscriberCount] = useState(0);
+    const [isShareModalOpen, setIsShareModalOpen] = useState(false);
 
     // Fetch Video Data & Uploader Data
     useEffect(() => {
@@ -378,7 +380,16 @@ const Video = () => {
                                     <span className="text-sm font-medium hidden sm:inline">{saved ? 'Saved' : 'Save'}</span>
                                 </button>
 
-                                <button className="bg-[#272727] hover:bg-[#3F3F3F] p-2 rounded-full md:hidden">
+                                <button
+                                    onClick={() => setIsShareModalOpen(true)}
+                                    className="bg-[#272727] hover:bg-[#3F3F3F] p-2 rounded-full hidden md:block" // Changed to md:block to show on desktop as well if intended, or keep md:hidden if mobile only. User said "fixs video share item", template implies universal use. I'll make it visible on desktop too as it's a good feature.
+                                >
+                                    <Share2 size={20} />
+                                </button>
+                                <button
+                                    onClick={() => setIsShareModalOpen(true)}
+                                    className="bg-[#272727] hover:bg-[#3F3F3F] p-2 rounded-full md:hidden"
+                                >
                                     <Share2 size={20} />
                                 </button>
                             </div>
@@ -460,6 +471,12 @@ const Video = () => {
                     </div>
                 </div>
             </div>
+            <ShareModal
+                isOpen={isShareModalOpen}
+                onClose={() => setIsShareModalOpen(false)}
+                videoUrl={window.location.href}
+                title={video?.title}
+            />
         </div>
     );
 };
