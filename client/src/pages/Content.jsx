@@ -71,29 +71,33 @@ const Content = () => {
     const [selectedVideos, setSelectedVideos] = useState([]);
     const [activeTab, setActiveTab] = useState('Videos');
     const [editingVideo, setEditingVideo] = useState(null);
+    const [error, setError] = useState(null);
 
     // Fetch Videos from Firestore
-    useEffect(() => {
-        const fetchVideos = async () => {
-            if (!currentUser) return;
-            try {
-                const q = query(
-                    collection(db, "videos"),
-                    where("userId", "==", currentUser.uid)
-                );
-                const querySnapshot = await getDocs(q);
-                const fetchedVideos = querySnapshot.docs.map(doc => ({
-                    id: doc.id,
-                    ...doc.data()
-                }));
-                setVideos(fetchedVideos);
-            } catch (error) {
-                console.error("Error fetching studio content:", error);
-            } finally {
-                setLoading(false);
-            }
-        };
+    const fetchVideos = async () => {
+        if (!currentUser) return;
+        setLoading(true);
+        setError(null);
+        try {
+            const q = query(
+                collection(db, "videos"),
+                where("userId", "==", currentUser.uid)
+            );
+            const querySnapshot = await getDocs(q);
+            const fetchedVideos = querySnapshot.docs.map(doc => ({
+                id: doc.id,
+                ...doc.data()
+            }));
+            setVideos(fetchedVideos);
+        } catch (error) {
+            console.error("Error fetching studio content:", error);
+            setError("Failed to load videos. Please check your connection.");
+        } finally {
+            setLoading(false);
+        }
+    };
 
+    useEffect(() => {
         fetchVideos();
     }, [currentUser]);
 
@@ -251,6 +255,28 @@ const Content = () => {
                                 <tbody className="divide-y divide-slate-200 dark:divide-[#326744]">
                                     {loading ? (
                                         <tr><td colSpan="7" className="p-8 text-center text-slate-500">Loading content...</td></tr>
+                                    ) : error ? (
+                                        <tr>
+                                            <td colSpan="7" className="p-12 text-center">
+                                                <div className="flex flex-col items-center justify-center gap-4">
+                                                    <div className="w-16 h-16 bg-red-500/10 rounded-full flex items-center justify-center">
+                                                        <span className="material-symbols-outlined text-3xl text-red-500">wifi_off</span>
+                                                    </div>
+                                                    <div className="space-y-1">
+                                                        <p className="text-slate-900 dark:text-white font-medium">Something went wrong</p>
+                                                        <p className="text-slate-500 dark:text-[#92c9a4] text-sm max-w-xs mx-auto">
+                                                            {error}
+                                                        </p>
+                                                    </div>
+                                                    <button
+                                                        onClick={fetchVideos}
+                                                        className="mt-2 bg-[#272727] text-white px-6 py-2 rounded-lg font-bold text-sm hover:bg-[#3F3F3F] transition-colors"
+                                                    >
+                                                        Retry
+                                                    </button>
+                                                </div>
+                                            </td>
+                                        </tr>
                                     ) : videos.length === 0 ? (
                                         <tr>
                                             <td colSpan="7" className="p-12 text-center">
