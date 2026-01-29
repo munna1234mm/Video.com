@@ -119,16 +119,16 @@ const Video = () => {
                 <div className="flex-1">
                     {/* Video Player */}
                     <div className="aspect-video bg-black rounded-xl overflow-hidden shadow-2xl relative group">
-                        {!video?.videoURL ? (
+                        {!video?.videoUrl && !video?.videoURL ? (
                             <div className="absolute inset-0 flex flex-col items-center justify-center text-gray-500 bg-[#1a1a1a]">
                                 <AlertCircle size={48} className="mb-2 opacity-50" />
                                 <p>Video source not found.</p>
                             </div>
-                        ) : video.videoURL.includes('youtube.com/embed') ? (
+                        ) : (video.videoUrl || video.videoURL).includes('youtube.com/embed') ? (
                             <iframe
                                 width="100%"
                                 height="100%"
-                                src={video.videoURL}
+                                src={video.videoUrl || video.videoURL}
                                 title="YouTube video player"
                                 frameBorder="0"
                                 allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
@@ -136,7 +136,7 @@ const Video = () => {
                             ></iframe>
                         ) : (
                             <video
-                                src={video.videoURL}
+                                src={video.videoUrl || video.videoURL}
                                 controls
                                 className="w-full h-full object-contain"
                                 autoPlay
@@ -155,10 +155,11 @@ const Video = () => {
                                 The video file could not be played. It might be corrupted or the URL is invalid.
                             </p>
                             <div className="mt-4 p-2 bg-black/50 rounded text-xs font-mono text-gray-500 max-w-[80%] break-all">
-                                {video?.videoURL}
+                                {video?.videoUrl || video?.videoURL}
                             </div>
                         </div>
                     </div>
+
 
 
                     {/* Video Title and Info */}
