@@ -1,5 +1,5 @@
 import React from 'react';
-import { Home, Compass, PlaySquare, Clock, ThumbsUp, Flame, Folder, Gamepad2, Trophy, Settings, HelpCircle, Flag, DollarSign } from 'lucide-react';
+import { Home, Compass, PlaySquare, Clock, ThumbsUp, Folder, Settings, HelpCircle, Flag, DollarSign } from 'lucide-react';
 
 import { Link, useLocation } from 'react-router-dom';
 
@@ -50,14 +50,7 @@ const Sidebar = ({ isOpen, toggleSidebar }) => {
                     </div>
                 </div>
 
-                <div className="py-4 border-b border-[#272727]">
-                    <h3 className="px-3 mb-2 text-lg font-bold">Explore</h3>
-                    <div onClick={() => window.innerWidth < 768 && toggleSidebar()}>
-                        <SidebarItem icon={Flame} label="Trending" to="/trending" />
-                        <SidebarItem icon={Gamepad2} label="Gaming" to="/gaming" />
-                        <SidebarItem icon={Trophy} label="Sports" to="/sports" />
-                    </div>
-                </div>
+
 
                 <div className="py-4">
                     <SidebarItem icon={Settings} label="Settings" />
