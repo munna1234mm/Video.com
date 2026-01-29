@@ -13,6 +13,7 @@ import Subscriptions from './pages/Subscriptions';
 import { AuthProvider } from './context/AuthContext';
 
 import ChannelCustomization from './pages/ChannelCustomization';
+import Monetization from './pages/Monetization';
 
 import { ToastProvider } from './context/ToastContext';
 import Simulation from './components/Simulation';
@@ -46,6 +47,7 @@ function App() {
                   <Route path="/playlist/liked" element={<LikedVideos />} />
                   <Route path="/playlist/watch-later" element={<WatchLater />} />
                   <Route path="/subscriptions" element={<Subscriptions />} />
+                  <Route path="/studio/monetization" element={<Monetization />} />
                 </Routes>
               </main>
             </div>
