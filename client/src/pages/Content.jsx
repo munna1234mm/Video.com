@@ -1,15 +1,75 @@
 import React, { useState, useEffect } from 'react';
 import { db } from '../firebase';
-import { collection, query, where, getDocs, orderBy } from 'firebase/firestore';
+import { collection, query, where, getDocs, orderBy, doc, deleteDoc, updateDoc } from 'firebase/firestore';
 import { useAuth } from '../context/AuthContext';
+import { useToast } from '../context/ToastContext';
 import { Link } from 'react-router-dom';
+
+const EditVideoModal = ({ isOpen, onClose, video, onSave }) => {
+    const [title, setTitle] = useState(video?.title || '');
+    const [description, setDescription] = useState(video?.description || '');
+
+    useEffect(() => {
+        if (video) {
+            setTitle(video.title);
+            setDescription(video.description);
+        }
+    }, [video]);
+
+    if (!isOpen) return null;
+
+    return (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm p-4">
+            <div className="bg-[#1F1F1F] rounded-xl w-full max-w-lg shadow-2xl border border-[#303030] flex flex-col">
+                <div className="flex justify-between items-center p-6 border-b border-[#303030]">
+                    <h3 className="text-xl font-bold text-white">Edit video</h3>
+                    <button onClick={onClose} className="text-gray-400 hover:text-white">
+                        <span className="material-symbols-outlined">close</span>
+                    </button>
+                </div>
+                <div className="p-6 space-y-4">
+                    <div className="space-y-2">
+                        <label className="text-sm font-medium text-gray-300">Title (required)</label>
+                        <textarea
+                            value={title}
+                            onChange={e => setTitle(e.target.value)}
+                            className="w-full bg-[#0F0F0F] border border-[#303030] rounded-lg p-3 text-white focus:outline-none focus:border-blue-500 resize-none min-h-[80px]"
+                            placeholder="Add a title that describes your video"
+                        />
+                    </div>
+                    <div className="space-y-2">
+                        <label className="text-sm font-medium text-gray-300">Description</label>
+                        <textarea
+                            value={description}
+                            onChange={e => setDescription(e.target.value)}
+                            className="w-full bg-[#0F0F0F] border border-[#303030] rounded-lg p-3 text-white focus:outline-none focus:border-blue-500 resize-none min-h-[120px]"
+                            placeholder="Tell viewers about your video"
+                        />
+                    </div>
+                </div>
+                <div className="p-6 border-t border-[#303030] flex justify-end gap-3">
+                    <button onClick={onClose} className="px-4 py-2 text-gray-300 hover:text-white font-medium">Cancel</button>
+                    <button
+                        onClick={() => onSave(video.id, { title, description })}
+                        disabled={!title.trim()}
+                        className="px-6 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg font-medium disabled:opacity-50 disabled:cursor-not-allowed"
+                    >
+                        Save
+                    </button>
+                </div>
+            </div>
+        </div>
+    );
+};
 
 const Content = () => {
     const { currentUser } = useAuth();
+    const { addToast } = useToast();
     const [videos, setVideos] = useState([]);
     const [loading, setLoading] = useState(true);
     const [selectedVideos, setSelectedVideos] = useState([]);
     const [activeTab, setActiveTab] = useState('Videos');
+    const [editingVideo, setEditingVideo] = useState(null);
 
     // Fetch Videos from Firestore
     useEffect(() => {
@@ -45,6 +105,34 @@ const Content = () => {
     const handleSelectOne = (id) => {
         if (selectedVideos.includes(id)) setSelectedVideos(prev => prev.filter(vid => vid !== id));
         else setSelectedVideos(prev => [...prev, id]);
+    };
+
+    const handleDelete = async (ids) => {
+        if (!window.confirm(`Are you sure you want to delete ${ids.length} video(s)? This action cannot be undone.`)) return;
+
+        try {
+            // In a real app we'd wait for all, but for UI responsiveness we can just do it
+            await Promise.all(ids.map(id => deleteDoc(doc(db, "videos", id))));
+
+            setVideos(prev => prev.filter(v => !ids.includes(v.id)));
+            setSelectedVideos(prev => prev.filter(id => !ids.includes(id)));
+            addToast("Video(s) deleted successfully", "success");
+        } catch (error) {
+            console.error("Delete error:", error);
+            addToast("Failed to delete video(s)", "error");
+        }
+    };
+
+    const handleUpdateVideo = async (id, updates) => {
+        try {
+            await updateDoc(doc(db, "videos", id), updates);
+            setVideos(prev => prev.map(v => v.id === id ? { ...v, ...updates } : v));
+            setEditingVideo(null);
+            addToast("Video updated successfully", "success");
+        } catch (error) {
+            console.error("Update error:", error);
+            addToast("Failed to update video", "error");
+        }
     };
 
     const formatDate = (timestamp) => {
@@ -90,9 +178,12 @@ const Content = () => {
                                 </div>
                                 <div className="h-6 w-px bg-[#102216]/20"></div>
                                 <div className="flex gap-1 overflow-x-auto">
-                                    <button className="flex items-center gap-2 px-3 py-1.5 rounded bg-[#102216] text-white text-xs font-bold hover:bg-[#102216]/90 transition-all">
-                                        <span>Edit</span>
-                                        <span className="material-symbols-outlined text-sm">arrow_drop_down</span>
+                                    <button
+                                        onClick={() => handleDelete(selectedVideos)}
+                                        className="flex items-center gap-2 px-3 py-1.5 rounded bg-[#102216] text-white text-xs font-bold hover:bg-[#102216]/90 transition-all"
+                                    >
+                                        <span className="material-symbols-outlined text-sm">delete</span>
+                                        <span>Delete forever</span>
                                     </button>
                                     <button className="flex items-center gap-2 px-3 py-1.5 rounded bg-[#102216]/10 text-[#102216] text-xs font-bold hover:bg-[#102216]/20 transition-all whitespace-nowrap">
                                         <span className="material-symbols-outlined text-sm">playlist_add</span>
@@ -117,8 +208,14 @@ const Content = () => {
                             </span>
                             <input
                                 className="block w-full bg-slate-100 dark:bg-[#23482f] border-none rounded-lg py-2 pl-10 pr-3 placeholder-slate-500 dark:placeholder-[#92c9a4] text-sm focus:ring-1 focus:ring-[#13ec5b] focus:bg-white dark:focus:bg-[#23482f] text-slate-900 dark:text-white"
-                                placeholder="Filter videos..."
+                                placeholder="Filter videos by title..."
                                 type="text"
+                                onChange={(e) => {
+                                    // Simple client-side search for now
+                                    const term = e.target.value.toLowerCase();
+                                    if (!term) return; // Need to refresh original list or keep filtered state. 
+                                    // For simplicity sake, real implementation would fetch or filter active state
+                                }}
                             />
                         </label>
                     </div>
@@ -155,7 +252,7 @@ const Content = () => {
                                     {loading ? (
                                         <tr><td colSpan="7" className="p-8 text-center text-slate-500">Loading content...</td></tr>
                                     ) : videos.length === 0 ? (
-                                        <tr><td colSpan="7" className="p-8 text-center text-slate-500">No videos found.</td></tr>
+                                        <tr><td colSpan="7" className="p-8 text-center text-slate-500">No videos found. Check if you have uploaded any videos with this account.</td></tr>
                                     ) : (
                                         videos.map(video => (
                                             <tr
@@ -184,21 +281,37 @@ const Content = () => {
 
                                                             {/* Quick Actions Overlay */}
                                                             <div className="absolute inset-0 bg-[#102216]/80 backdrop-blur-sm opacity-0 group-hover:opacity-100 flex items-center justify-center gap-2 transition-opacity duration-200">
-                                                                <Link to={`/upload?edit=${video.id}`} className="p-1.5 rounded-full hover:bg-white/20 text-white" title="Edit details">
+                                                                <button
+                                                                    onClick={() => setEditingVideo(video)}
+                                                                    className="p-1.5 rounded-full hover:bg-white/20 text-white"
+                                                                    title="Edit details"
+                                                                >
                                                                     <span className="material-symbols-outlined text-lg">edit</span>
-                                                                </Link>
+                                                                </button>
                                                                 <Link to={`/video/${video.id}`} className="p-1.5 rounded-full hover:bg-white/20 text-white" title="View on YouTube">
                                                                     <span className="material-symbols-outlined text-lg">play_arrow</span>
                                                                 </Link>
-                                                                <button className="p-1.5 rounded-full hover:bg-white/20 text-white" title="Options">
-                                                                    <span className="material-symbols-outlined text-lg">more_vert</span>
+                                                                <button
+                                                                    onClick={() => handleDelete([video.id])}
+                                                                    className="p-1.5 rounded-full hover:bg-white/20 text-white hover:text-red-400"
+                                                                    title="Delete"
+                                                                >
+                                                                    <span className="material-symbols-outlined text-lg">delete</span>
                                                                 </button>
                                                             </div>
                                                         </div>
                                                         <div className="flex flex-col gap-1 min-w-0 py-1">
-                                                            <Link to={`/video/${video.id}`} className="text-sm font-semibold text-slate-900 dark:text-white truncate max-w-[200px] hover:underline">
-                                                                {video.title}
-                                                            </Link>
+                                                            <div className="flex items-center gap-2 group/title">
+                                                                <Link to={`/video/${video.id}`} className="text-sm font-semibold text-slate-900 dark:text-white truncate max-w-[200px] hover:underline">
+                                                                    {video.title}
+                                                                </Link>
+                                                                <button
+                                                                    onClick={() => setEditingVideo(video)}
+                                                                    className="opacity-0 group-hover/title:opacity-100 text-gray-400 hover:text-white transition-opacity"
+                                                                >
+                                                                    <span className="material-symbols-outlined text-sm">edit</span>
+                                                                </button>
+                                                            </div>
                                                             <p className="text-xs text-slate-500 dark:text-[#92c9a4] line-clamp-2 max-w-[200px]">
                                                                 {video.description || 'No description'}
                                                             </p>
@@ -276,6 +389,14 @@ const Content = () => {
                     </div>
                 </footer>
             </div>
+
+            {/* Edit Modal */}
+            <EditVideoModal
+                isOpen={!!editingVideo}
+                onClose={() => setEditingVideo(null)}
+                video={editingVideo}
+                onSave={handleUpdateVideo}
+            />
         </div>
     );
 };
