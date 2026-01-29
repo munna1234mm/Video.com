@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useParams } from 'react-router-dom';
-import { ThumbsUp, ThumbsDown, Share2, Loader2 } from 'lucide-react';
+import { ThumbsUp, ThumbsDown, Share2, Loader2, AlertCircle } from 'lucide-react';
+
 import { doc, getDoc, setDoc, increment, collection, addDoc, serverTimestamp, query, orderBy, onSnapshot } from 'firebase/firestore';
 import { db } from '../firebase';
 import { useAuth } from '../context/AuthContext';
@@ -117,8 +118,13 @@ const Video = () => {
                 {/* Left Side: Video Player and Details */}
                 <div className="flex-1">
                     {/* Video Player */}
-                    <div className="aspect-video bg-black rounded-xl overflow-hidden shadow-2xl">
-                        {video?.videoURL?.includes('youtube.com/embed') ? (
+                    <div className="aspect-video bg-black rounded-xl overflow-hidden shadow-2xl relative group">
+                        {!video?.videoURL ? (
+                            <div className="absolute inset-0 flex flex-col items-center justify-center text-gray-500 bg-[#1a1a1a]">
+                                <AlertCircle size={48} className="mb-2 opacity-50" />
+                                <p>Video source not found.</p>
+                            </div>
+                        ) : video.videoURL.includes('youtube.com/embed') ? (
                             <iframe
                                 width="100%"
                                 height="100%"
@@ -132,11 +138,28 @@ const Video = () => {
                             <video
                                 src={video.videoURL}
                                 controls
-                                className="w-full h-full"
+                                className="w-full h-full object-contain"
                                 autoPlay
+                                onError={(e) => {
+                                    console.error("Video Error:", e.nativeEvent);
+                                    e.target.style.display = 'none';
+                                    e.target.nextSibling.style.display = 'flex';
+                                }}
                             />
                         )}
+                        {/* Fallback Error UI (Hidden by default) */}
+                        <div className="hidden absolute inset-0 flex-col items-center justify-center text-white bg-[#1a1a1a] z-10">
+                            <AlertCircle size={48} className="mb-4 text-red-500" />
+                            <p className="text-lg font-bold">Video Failed to Load</p>
+                            <p className="text-sm text-gray-400 mt-2 max-w-sm text-center">
+                                The video file could not be played. It might be corrupted or the URL is invalid.
+                            </p>
+                            <div className="mt-4 p-2 bg-black/50 rounded text-xs font-mono text-gray-500 max-w-[80%] break-all">
+                                {video?.videoURL}
+                            </div>
+                        </div>
                     </div>
+
 
                     {/* Video Title and Info */}
                     <div className="mt-4">
