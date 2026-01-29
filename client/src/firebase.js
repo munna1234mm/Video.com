@@ -12,12 +12,21 @@ const firebaseConfig = {
     appId: import.meta.env.VITE_FIREBASE_APP_ID
 };
 
-if (!firebaseConfig.apiKey) {
-    console.error("FIREBASE CONFIGURATION MISSING! Please add VITE_FIREBASE_API_KEY and other variables to your .env file or Render Environment Variables.");
+let app;
+let auth;
+let googleProvider;
+let db;
+let storage;
+
+try {
+    app = initializeApp(firebaseConfig);
+    auth = getAuth(app);
+    googleProvider = new GoogleAuthProvider();
+    db = getFirestore(app);
+    storage = getStorage(app);
+} catch (error) {
+    console.error("Firebase initialization error:", error);
 }
 
-const app = initializeApp(firebaseConfig);
-export const auth = getAuth(app);
-export const googleProvider = new GoogleAuthProvider();
-export const db = getFirestore(app);
-export const storage = getStorage(app);
+export { auth, googleProvider, db, storage };
+

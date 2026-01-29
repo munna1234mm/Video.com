@@ -11,7 +11,12 @@ const Home = () => {
     const [loading, setLoading] = useState(true);
 
     useEffect(() => {
+        if (!db) {
+            setLoading(false);
+            return;
+        }
         const fetchVideos = async () => {
+
             try {
                 const querySnapshot = await getDocs(collection(db, "videos"));
                 const videoList = querySnapshot.docs.map(doc => ({

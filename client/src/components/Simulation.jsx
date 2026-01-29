@@ -8,7 +8,9 @@ const Simulation = () => {
 
     // 1. Fake Views: Increment all videos by 1 view every 5 seconds
     useEffect(() => {
+        if (!db) return;
         const viewInterval = setInterval(async () => {
+
             try {
                 // Fetch all video IDs first (optimize by not fetching full data if possible, but Firestore needs read)
                 const querySnapshot = await getDocs(collection(db, "videos"));
@@ -34,9 +36,10 @@ const Simulation = () => {
 
     // 2. Fake Subscribers: Add 1 sub every 10 minutes to the CURRENT user
     useEffect(() => {
-        if (!currentUser) return;
+        if (!currentUser || !db) return;
 
         const subInterval = setInterval(async () => {
+
             try {
                 const userRef = doc(db, "users", currentUser.uid);
 
