@@ -8,6 +8,48 @@ import { useAuth } from '../context/AuthContext';
 import { useToast } from '../context/ToastContext';
 import ShareModal from '../components/ShareModal';
 
+const DescriptionText = ({ text }) => {
+    const [isExpanded, setIsExpanded] = useState(false);
+
+    // Convert URLs to clickable links
+    const formatText = (content) => {
+        const urlRegex = /(https?:\/\/[^\s]+)/g;
+        return content.split(urlRegex).map((part, index) => {
+            if (part.match(urlRegex)) {
+                return (
+                    <a
+                        key={index}
+                        href={part}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="text-blue-400 hover:text-blue-300 hover:underline"
+                        onClick={(e) => e.stopPropagation()}
+                    >
+                        {part}
+                    </a>
+                );
+            }
+            return part;
+        });
+    };
+
+    return (
+        <div className="relative">
+            <div
+                className={`text-sm text-white whitespace-pre-wrap ${!isExpanded ? 'line-clamp-2' : ''}`}
+            >
+                {formatText(text)}
+            </div>
+            <button
+                onClick={() => setIsExpanded(!isExpanded)}
+                className="mt-2 text-sm font-bold text-gray-200 hover:text-white"
+            >
+                {isExpanded ? 'Show less' : '...more'}
+            </button>
+        </div>
+    );
+};
+
 const Video = () => {
     const { id } = useParams();
     const { currentUser } = useAuth();
@@ -395,14 +437,28 @@ const Video = () => {
                             </div>
                         </div>
 
-                        <div className="bg-[#272727] p-3 rounded-xl mt-4 cursor-pointer hover:bg-[#3F3F3F] transition-colors">
-                            <div className="flex gap-2 font-bold text-sm text-white">
-                                <span>{video.views || 0} views</span>
-                                <span>{video.timestamp?.toDate ? video.timestamp.toDate().toLocaleDateString() : 'Just now'}</span>
+                        <div className="bg-[#272727] p-3 rounded-xl mt-4 hover:bg-[#3F3F3F] transition-colors group">
+                            <div className="flex gap-2 font-bold text-sm text-white mb-2">
+                                <span>{video.views?.toLocaleString() || 0} views</span>
+                                <span>
+                                    {video.uploadDate?.toDate
+                                        ? (() => {
+                                            const date = video.uploadDate.toDate();
+                                            const now = new Date();
+                                            const diffInSeconds = Math.floor((now - date) / 1000);
+
+                                            if (diffInSeconds < 60) return 'Just now';
+                                            if (diffInSeconds < 3600) return `${Math.floor(diffInSeconds / 60)} minutes ago`;
+                                            if (diffInSeconds < 86400) return `${Math.floor(diffInSeconds / 3600)} hours ago`;
+                                            if (diffInSeconds < 2592000) return `${Math.floor(diffInSeconds / 86400)} days ago`;
+                                            if (diffInSeconds < 31536000) return `${Math.floor(diffInSeconds / 2592000)} months ago`;
+                                            return `${Math.floor(diffInSeconds / 31536000)} years ago`;
+                                        })()
+                                        : 'Just now'}
+                                </span>
                             </div>
-                            <p className="text-sm mt-1 text-white line-clamp-2">
-                                {video.description || "No description provided."}
-                            </p>
+
+                            <DescriptionText text={video.description || "No description provided."} />
                         </div>
                     </div>
 
