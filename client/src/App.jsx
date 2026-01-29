@@ -6,6 +6,7 @@ import Home from './pages/Home';
 import Video from './pages/Video';
 import Upload from './pages/Upload';
 import Channel from './pages/Channel';
+import History from './pages/History';
 import { AuthProvider } from './context/AuthContext';
 
 import ChannelCustomization from './pages/ChannelCustomization';
@@ -38,6 +39,7 @@ function App() {
                   <Route path="/upload" element={<Upload />} />
                   <Route path="/channel/:uid" element={<Channel />} />
                   <Route path="/studio/customization" element={<ChannelCustomization />} />
+                  <Route path="/history" element={<History />} />
                 </Routes>
               </main>
             </div>

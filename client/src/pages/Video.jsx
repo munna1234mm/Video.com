@@ -29,7 +29,24 @@ const Video = () => {
                 const docSnap = await getDoc(docRef);
 
                 if (docSnap.exists()) {
-                    setVideo({ id: docSnap.id, ...docSnap.data() });
+                    const videoData = { id: docSnap.id, ...docSnap.data() };
+                    setVideo(videoData);
+
+                    // History: Add to user's history if logged in
+                    if (currentUser && db) {
+                        const historyRef = doc(db, "users", currentUser.uid, "history", id); // Use video ID as doc ID to dedup
+                        await setDoc(historyRef, {
+                            videoId: id,
+                            title: videoData.title || '',
+                            thumbnailUrl: videoData.thumbnailUrl || '',
+                            uploader: videoData.uploader || 'Unknown',
+                            userId: videoData.userId || '',
+                            views: videoData.views || 0,
+                            duration: videoData.duration || '00:00',
+                            uploadDate: videoData.uploadDate || null,
+                            viewedAt: serverTimestamp() // To sort by recent
+                        }, { merge: true });
+                    }
 
                     const hasViewed = sessionStorage.getItem(`viewed_${id}`);
                     if (!hasViewed) {
@@ -37,6 +54,7 @@ const Video = () => {
                         sessionStorage.setItem(`viewed_${id}`, 'true');
                     }
                 } else {
+
                     console.log("No such video!");
                 }
             } catch (err) {
