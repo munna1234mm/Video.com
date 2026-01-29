@@ -12,8 +12,8 @@ const Home = () => {
 
     useEffect(() => {
         if (!db) {
-            setLoading(false);
-            return;
+            console.warn("Database not initialized yet...");
+            // Don't kill loading state immediately, let it retry or fail in catch
         }
         const fetchVideos = async () => {
 
