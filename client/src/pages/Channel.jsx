@@ -160,16 +160,16 @@ const Channel = () => {
                         Share
                     </button>
                     {isOwner ? (
-                        <div className="flex gap-2">
+                        <div className="flex flex-wrap gap-2 justify-center md:justify-start">
                             <button
                                 onClick={() => navigate('/studio/customization')}
-                                className="bg-[#272727] text-white px-4 py-2 rounded-full font-medium hover:bg-[#3F3F3F] transition-colors"
+                                className="bg-[#272727] text-white px-4 py-2 rounded-full font-medium hover:bg-[#3F3F3F] transition-colors whitespace-nowrap"
                             >
                                 Customize Channel
                             </button>
                             <button
                                 onClick={() => navigate('/studio/content')}
-                                className="bg-[#272727] text-white px-4 py-2 rounded-full font-medium hover:bg-[#3F3F3F] transition-colors"
+                                className="bg-[#272727] text-white px-4 py-2 rounded-full font-medium hover:bg-[#3F3F3F] transition-colors whitespace-nowrap"
                             >
                                 Manage Videos
                             </button>
