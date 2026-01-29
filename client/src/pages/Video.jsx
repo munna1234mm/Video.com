@@ -1,8 +1,8 @@
 import React, { useState, useEffect } from 'react';
 import { useParams } from 'react-router-dom';
-import { ThumbsUp, ThumbsDown, Share2, Loader2, AlertCircle } from 'lucide-react';
+import { ThumbsUp, ThumbsDown, Share2, Loader2, AlertCircle, ListPlus, Check } from 'lucide-react';
 
-import { doc, getDoc, setDoc, increment, collection, addDoc, serverTimestamp, query, orderBy, onSnapshot } from 'firebase/firestore';
+import { doc, getDoc, setDoc, increment, deleteDoc, collection, addDoc, serverTimestamp, query, orderBy, onSnapshot } from 'firebase/firestore';
 import { db } from '../firebase';
 import { useAuth } from '../context/AuthContext';
 import { useToast } from '../context/ToastContext';
@@ -16,6 +16,10 @@ const Video = () => {
     const [loading, setLoading] = useState(true);
     const [comments, setComments] = useState([]);
     const [newComment, setNewComment] = useState("");
+
+    // Interaction states
+    const [liked, setLiked] = useState(false);
+    const [saved, setSaved] = useState(false);
 
     // Fetch Video Data
     useEffect(() => {
@@ -65,6 +69,94 @@ const Video = () => {
         };
         fetchVideo();
     }, [id]);
+
+    // Check Liked/Saved Status
+    useEffect(() => {
+        if (!currentUser || !id || !db) return;
+
+        const checkStatus = async () => {
+            try {
+                // Check Liked
+                const likeRef = doc(db, "users", currentUser.uid, "likedVideos", id);
+                const likeSnap = await getDoc(likeRef);
+                setLiked(likeSnap.exists());
+
+                // Check Saved (Watch Later)
+                const saveRef = doc(db, "users", currentUser.uid, "watchLater", id);
+                const saveSnap = await getDoc(saveRef);
+                setSaved(saveSnap.exists());
+            } catch (err) {
+                console.error("Status check failed", err);
+            }
+        };
+        checkStatus();
+    }, [id, currentUser]);
+
+    // Handle Like
+    const handleLike = async () => {
+        if (!currentUser) return addToast("Please sign in to like videos", "error");
+
+        try {
+            const likeRef = doc(db, "users", currentUser.uid, "likedVideos", id);
+            const videoRef = doc(db, "videos", id);
+
+            if (liked) {
+                // Unlike
+                await deleteDoc(likeRef);
+                await setDoc(videoRef, { likes: increment(-1) }, { merge: true });
+                setVideo(prev => ({ ...prev, likes: Math.max(0, (prev.likes || 0) - 1) }));
+            } else {
+                // Like
+                await setDoc(likeRef, {
+                    videoId: id,
+                    title: video.title,
+                    thumbnailUrl: video.thumbnailUrl || video.videoURL, // Fallback
+                    uploader: video.uploader,
+                    userId: video.userId,
+                    views: video.views,
+                    likedAt: serverTimestamp()
+                });
+                await setDoc(videoRef, { likes: increment(1) }, { merge: true });
+                setVideo(prev => ({ ...prev, likes: (prev.likes || 0) + 1 }));
+            }
+            setLiked(!liked);
+        } catch (err) {
+            console.error(err);
+            addToast("Failed to update like", "error");
+        }
+    };
+
+    // Handle Save (Watch Later)
+    const handleSave = async () => {
+        if (!currentUser) return addToast("Please sign in to save videos", "error");
+
+        try {
+            const saveRef = doc(db, "users", currentUser.uid, "watchLater", id);
+
+            if (saved) {
+                // Remove
+                await deleteDoc(saveRef);
+                addToast("Removed from Watch Later", "success");
+            } else {
+                // Add
+                await setDoc(saveRef, {
+                    videoId: id,
+                    title: video.title,
+                    thumbnailUrl: video.thumbnailUrl || video.videoURL,
+                    uploader: video.uploader,
+                    userId: video.userId,
+                    views: video.views,
+                    savedAt: serverTimestamp()
+                });
+                addToast("Saved to Watch Later", "success");
+            }
+            setSaved(!saved);
+        } catch (err) {
+            console.error(err);
+            addToast("Failed to update list", "error");
+        }
+    };
+
 
     // Fetch Comments
     useEffect(() => {
@@ -200,13 +292,30 @@ const Video = () => {
                                 </button>
                             </div>
 
-                            <div className="flex items-center bg-[#272727] rounded-full p-0.5">
-                                <button className="flex items-center gap-2 hover:bg-[#3F3F3F] px-4 py-2 rounded-l-full border-r border-white/10 transition-colors group">
-                                    <ThumbsUp size={20} className="group-active:scale-125 transition-transform" />
-                                    <span className="text-sm font-medium">{video.likes || 0}</span>
+                            <div className="flex items-center gap-2">
+                                <div className="flex items-center bg-[#272727] rounded-full p-0.5">
+                                    <button
+                                        onClick={handleLike}
+                                        className={`flex items-center gap-2 px-4 py-2 rounded-l-full border-r border-white/10 transition-colors group ${liked ? 'hover:bg-[#3F3F3F] text-blue-500' : 'hover:bg-[#3F3F3F]'}`}
+                                    >
+                                        <ThumbsUp size={20} className={`group-active:scale-125 transition-transform ${liked ? 'fill-current' : ''}`} />
+                                        <span className="text-sm font-medium">{video.likes || 0}</span>
+                                    </button>
+                                    <button className="hover:bg-[#3F3F3F] px-4 py-2 rounded-r-full transition-colors group">
+                                        <ThumbsDown size={20} className="group-active:scale-125 transition-transform" />
+                                    </button>
+                                </div>
+
+                                <button
+                                    onClick={handleSave}
+                                    className={`flex items-center gap-2 bg-[#272727] hover:bg-[#3F3F3F] px-4 py-2 rounded-full transition-colors ${saved ? 'text-blue-500' : 'text-white'}`}
+                                >
+                                    {saved ? <Check size={20} /> : <ListPlus size={20} />}
+                                    <span className="text-sm font-medium hidden sm:inline">{saved ? 'Saved' : 'Save'}</span>
                                 </button>
-                                <button className="hover:bg-[#3F3F3F] px-4 py-2 rounded-r-full transition-colors group">
-                                    <ThumbsDown size={20} className="group-active:scale-125 transition-transform" />
+
+                                <button className="bg-[#272727] hover:bg-[#3F3F3F] p-2 rounded-full md:hidden">
+                                    <Share2 size={20} />
                                 </button>
                             </div>
                         </div>

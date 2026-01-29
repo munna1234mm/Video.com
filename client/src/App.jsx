@@ -7,6 +7,8 @@ import Video from './pages/Video';
 import Upload from './pages/Upload';
 import Channel from './pages/Channel';
 import History from './pages/History';
+import LikedVideos from './pages/LikedVideos';
+import WatchLater from './pages/WatchLater';
 import { AuthProvider } from './context/AuthContext';
 
 import ChannelCustomization from './pages/ChannelCustomization';
@@ -40,6 +42,8 @@ function App() {
                   <Route path="/channel/:uid" element={<Channel />} />
                   <Route path="/studio/customization" element={<ChannelCustomization />} />
                   <Route path="/history" element={<History />} />
+                  <Route path="/playlist/liked" element={<LikedVideos />} />
+                  <Route path="/playlist/watch-later" element={<WatchLater />} />
                 </Routes>
               </main>
             </div>
