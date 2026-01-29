@@ -1,5 +1,5 @@
 import React from 'react';
-import { Home, Compass, PlaySquare, Clock, ThumbsUp, Flame, Folder, Gamepad2, Trophy, Settings, HelpCircle, Flag } from 'lucide-react';
+import { Home, Compass, PlaySquare, Clock, ThumbsUp, Flame, Folder, Gamepad2, Trophy, Settings, HelpCircle, Flag, DollarSign } from 'lucide-react';
 
 import { Link, useLocation } from 'react-router-dom';
 
@@ -46,6 +46,7 @@ const Sidebar = ({ isOpen, toggleSidebar }) => {
                         <SidebarItem icon={Clock} label="History" to="/history" />
                         <SidebarItem icon={Clock} label="Watch Later" to="/playlist/watch-later" />
                         <SidebarItem icon={ThumbsUp} label="Liked Videos" to="/playlist/liked" />
+                        <SidebarItem icon={DollarSign} label="Monetization" to="/studio/monetization" />
                     </div>
                 </div>
 
