@@ -1,10 +1,11 @@
 import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import { collection, query, where, getDocs, doc, getDoc } from 'firebase/firestore';
+import { collection, query, where, getDocs, doc, getDoc, setDoc, deleteDoc, serverTimestamp, increment } from 'firebase/firestore';
 import { db } from '../firebase';
 import VideoCard from '../components/VideoCard';
 import { Loader2, UserCircle } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
+import { useToast } from '../context/ToastContext';
 import EditChannelModal from '../components/EditChannelModal';
 
 const Channel = () => {
@@ -29,7 +30,11 @@ const Channel = () => {
     const [activeTab, setActiveTab] = useState('videos');
     const [isEditModalOpen, setIsEditModalOpen] = useState(false);
     const { currentUser } = useAuth();
+    const { addToast } = useToast();
     const isOwner = currentUser?.uid === uid;
+
+    // Subscribe State
+    const [subscribed, setSubscribed] = useState(false);
 
     useEffect(() => {
         if (!db) {
@@ -44,6 +49,13 @@ const Channel = () => {
                 if (userSnap.exists()) {
                     setChannelData(userSnap.data());
                     setChannelName(userSnap.data().displayName || 'Channel');
+                }
+
+                // Check subscription status
+                if (currentUser) {
+                    const subRef = doc(db, "users", currentUser.uid, "subscriptions", uid);
+                    const subSnap = await getDoc(subRef);
+                    setSubscribed(subSnap.exists());
                 }
 
                 // 2. Fetch Videos
@@ -67,6 +79,41 @@ const Channel = () => {
         };
         fetchData();
     }, [uid, currentUser, isOwner]);
+
+    const handleSubscribe = async () => {
+        if (!currentUser) return addToast("Please sign in to subscribe", "error");
+        if (isOwner) return addToast("You cannot subscribe to your own channel", "error");
+
+        try {
+            const subRef = doc(db, "users", currentUser.uid, "subscriptions", uid);
+            const uploaderRef = doc(db, "users", uid);
+
+            if (subscribed) {
+                // Unsubscribe
+                await deleteDoc(subRef);
+                await setDoc(uploaderRef, { subscribers: increment(-1) }, { merge: true });
+                // Optimistic UI updates
+                setChannelData(prev => ({ ...prev, subscribers: Math.max(0, (prev?.subscribers || 0) - 1) }));
+                addToast("Unsubscribed", "success");
+            } else {
+                // Subscribe
+                await setDoc(subRef, {
+                    channelId: uid,
+                    channelName: channelName || 'Unknown',
+                    channelPhoto: channelData?.photoURL || '',
+                    subscribedAt: serverTimestamp()
+                });
+                await setDoc(uploaderRef, { subscribers: increment(1) }, { merge: true });
+                // Optimistic UI updates
+                setChannelData(prev => ({ ...prev, subscribers: (prev?.subscribers || 0) + 1 }));
+                addToast("Subscribed!", "success");
+            }
+            setSubscribed(!subscribed);
+        } catch (err) {
+            console.error("Subscription failed:", err);
+            addToast("Failed to subscribe", "error");
+        }
+    };
 
     const handleShare = () => {
         navigator.clipboard.writeText(window.location.href);
@@ -125,8 +172,11 @@ const Channel = () => {
                             </button>
                         </div>
                     ) : (
-                        <button className="bg-white text-black px-6 py-2 rounded-full font-medium hover:bg-gray-200 transition-colors">
-                            Subscribe
+                        <button
+                            onClick={handleSubscribe}
+                            className={`px-6 py-2 rounded-full font-medium transition-colors ${subscribed ? 'bg-[#272727] text-white hover:bg-[#3F3F3F]' : 'bg-white text-black hover:bg-gray-200'}`}
+                        >
+                            {subscribed ? 'Subscribed' : 'Subscribe'}
                         </button>
                     )}
                 </div>
