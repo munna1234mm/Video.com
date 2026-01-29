@@ -20,6 +20,7 @@ const Video = () => {
     // Interaction states
     const [liked, setLiked] = useState(false);
     const [saved, setSaved] = useState(false);
+    const [subscribed, setSubscribed] = useState(false);
 
     // Fetch Video Data
     useEffect(() => {
@@ -36,6 +37,13 @@ const Video = () => {
                     const videoData = { id: docSnap.id, ...docSnap.data() };
                     setVideo(videoData);
 
+                    // Check subscription status once video loaded
+                    if (currentUser && videoData.userId) {
+                        const subRef = doc(db, "users", currentUser.uid, "subscriptions", videoData.userId);
+                        const subSnap = await getDoc(subRef);
+                        setSubscribed(subSnap.exists());
+                    }
+
                     // History: Add to user's history if logged in
                     if (currentUser && db) {
                         const historyRef = doc(db, "users", currentUser.uid, "history", id); // Use video ID as doc ID to dedup
@@ -45,6 +53,9 @@ const Video = () => {
                             thumbnailUrl: videoData.thumbnailUrl || '',
                             uploader: videoData.uploader || 'Unknown',
                             userId: videoData.userId || '',
+                            channelId: videoData.userId || '', // Save channelId for subscriptions page
+                            channelName: videoData.uploader || 'Unknown',
+                            channelPhoto: videoData.userPhoto || '', // Assuming we have this
                             views: videoData.views || 0,
                             duration: videoData.duration || '00:00',
                             uploadDate: videoData.uploadDate || null,
@@ -156,6 +167,37 @@ const Video = () => {
             addToast("Failed to update list", "error");
         }
     };
+
+    const handleSubscribe = async () => {
+        if (!currentUser) return addToast("Please sign in to subscribe", "error");
+        if (!video?.userId) return;
+
+        if (video.userId === currentUser.uid) return addToast("You cannot subscribe to your own channel", "error");
+
+        try {
+            const subRef = doc(db, "users", currentUser.uid, "subscriptions", video.userId);
+
+            if (subscribed) {
+                // Unsubscribe
+                await deleteDoc(subRef);
+                addToast("Unsubscribed", "success");
+            } else {
+                // Subscribe
+                await setDoc(subRef, {
+                    channelId: video.userId,
+                    channelName: video.uploader || 'Unknown',
+                    channelPhoto: video.userPhoto || '',
+                    subscribedAt: serverTimestamp()
+                });
+                addToast("Subscribed!", "success");
+            }
+            setSubscribed(!subscribed);
+        } catch (err) {
+            console.error("Subscription failed:", err);
+            addToast("Failed to subscribe", "error");
+        }
+    };
+
 
 
     // Fetch Comments
@@ -287,8 +329,11 @@ const Video = () => {
                                     <h3 className="font-bold text-[16px] text-white leading-tight">{video.uploader}</h3>
                                     <p className="text-xs text-gray-400">0 subscribers</p>
                                 </div>
-                                <button className="bg-white text-black px-4 py-2 rounded-full font-medium ml-4 hover:bg-gray-200 transition-colors">
-                                    Subscribe
+                                <button
+                                    onClick={handleSubscribe}
+                                    className={`px-4 py-2 rounded-full font-medium ml-4 transition-colors ${subscribed ? 'bg-[#272727] text-white hover:bg-[#3F3F3F]' : 'bg-white text-black hover:bg-gray-200'}`}
+                                >
+                                    {subscribed ? 'Subscribed' : 'Subscribe'}
                                 </button>
                             </div>
 
