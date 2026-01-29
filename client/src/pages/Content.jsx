@@ -78,8 +78,7 @@ const Content = () => {
             try {
                 const q = query(
                     collection(db, "videos"),
-                    where("userId", "==", currentUser.uid),
-                    orderBy("uploadDate", "desc")
+                    where("userId", "==", currentUser.uid)
                 );
                 const querySnapshot = await getDocs(q);
                 const fetchedVideos = querySnapshot.docs.map(doc => ({
