@@ -167,7 +167,10 @@ const Channel = () => {
                             >
                                 Customize Channel
                             </button>
-                            <button className="bg-[#272727] text-white px-4 py-2 rounded-full font-medium hover:bg-[#3F3F3F] transition-colors">
+                            <button
+                                onClick={() => navigate('/studio/content')}
+                                className="bg-[#272727] text-white px-4 py-2 rounded-full font-medium hover:bg-[#3F3F3F] transition-colors"
+                            >
                                 Manage Videos
                             </button>
                         </div>
