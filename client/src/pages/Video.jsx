@@ -21,8 +21,9 @@ const Video = () => {
     const [liked, setLiked] = useState(false);
     const [saved, setSaved] = useState(false);
     const [subscribed, setSubscribed] = useState(false);
+    const [subscriberCount, setSubscriberCount] = useState(0);
 
-    // Fetch Video Data
+    // Fetch Video Data & Uploader Data
     useEffect(() => {
         if (!db) {
             setLoading(false);
@@ -37,11 +38,24 @@ const Video = () => {
                     const videoData = { id: docSnap.id, ...docSnap.data() };
                     setVideo(videoData);
 
-                    // Check subscription status once video loaded
-                    if (currentUser && videoData.userId) {
-                        const subRef = doc(db, "users", currentUser.uid, "subscriptions", videoData.userId);
-                        const subSnap = await getDoc(subRef);
-                        setSubscribed(subSnap.exists());
+                    // Fetch Uploader Profile for Subscriber Count
+                    if (videoData.userId) {
+                        try {
+                            const uploaderRef = doc(db, "users", videoData.userId);
+                            const uploaderSnap = await getDoc(uploaderRef);
+                            if (uploaderSnap.exists()) {
+                                setSubscriberCount(uploaderSnap.data().subscribers || 0);
+                            }
+                        } catch (err) {
+                            console.error("Error fetching uploader:", err);
+                        }
+
+                        // Check subscription status
+                        if (currentUser) {
+                            const subRef = doc(db, "users", currentUser.uid, "subscriptions", videoData.userId);
+                            const subSnap = await getDoc(subRef);
+                            setSubscribed(subSnap.exists());
+                        }
                     }
 
                     // History: Add to user's history if logged in
@@ -176,10 +190,13 @@ const Video = () => {
 
         try {
             const subRef = doc(db, "users", currentUser.uid, "subscriptions", video.userId);
+            const uploaderRef = doc(db, "users", video.userId);
 
             if (subscribed) {
                 // Unsubscribe
                 await deleteDoc(subRef);
+                await setDoc(uploaderRef, { subscribers: increment(-1) }, { merge: true });
+                setSubscriberCount(prev => Math.max(0, prev - 1));
                 addToast("Unsubscribed", "success");
             } else {
                 // Subscribe
@@ -189,6 +206,8 @@ const Video = () => {
                     channelPhoto: video.userPhoto || '',
                     subscribedAt: serverTimestamp()
                 });
+                await setDoc(uploaderRef, { subscribers: increment(1) }, { merge: true });
+                setSubscriberCount(prev => prev + 1);
                 addToast("Subscribed!", "success");
             }
             setSubscribed(!subscribed);
@@ -327,7 +346,7 @@ const Video = () => {
                                 </div>
                                 <div>
                                     <h3 className="font-bold text-[16px] text-white leading-tight">{video.uploader}</h3>
-                                    <p className="text-xs text-gray-400">0 subscribers</p>
+                                    <p className="text-xs text-gray-400">{subscriberCount} subscribers</p>
                                 </div>
                                 <button
                                     onClick={handleSubscribe}
