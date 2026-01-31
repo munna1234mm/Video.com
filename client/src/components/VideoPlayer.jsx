@@ -100,8 +100,6 @@ const VideoPlayer = ({ src, poster, title, vastTag }) => {
             className="w-full h-full"
             src={src}
             controls
-            autoPlay
-            muted
             playsInline
         >
             <p>Your browser does not support HTML5 video.</p>
