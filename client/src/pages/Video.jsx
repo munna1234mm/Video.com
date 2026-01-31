@@ -7,6 +7,7 @@ import { db } from '../firebase';
 import { useAuth } from '../context/AuthContext';
 import { useToast } from '../context/ToastContext';
 import ShareModal from '../components/ShareModal';
+import VideoPlayer from '../components/VideoPlayer';
 
 const DescriptionText = ({ text }) => {
     const [isExpanded, setIsExpanded] = useState(false);
@@ -350,16 +351,11 @@ const Video = () => {
                                 allowFullScreen
                             ></iframe>
                         ) : (
-                            <video
+                            <VideoPlayer
                                 src={video.videoUrl || video.videoURL}
-                                controls
-                                className="w-full h-full object-contain"
-                                autoPlay
-                                onError={(e) => {
-                                    console.error("Video Error:", e.nativeEvent);
-                                    e.target.style.display = 'none';
-                                    e.target.nextSibling.style.display = 'flex';
-                                }}
+                                poster={video.thumbnailUrl}
+                                title={video.title}
+                                vastTag="https://quickwittedconclusion.com/dGm/FDzwd.GLNJvzZoGXUN/heimM9OulZ/UvlikpPdTyY_3jN/jZE/2DNtTzMct/Nkjlcf2/MnThYI1rN/AS"
                             />
                         )}
                         {/* Fallback Error UI (Hidden by default) */}
