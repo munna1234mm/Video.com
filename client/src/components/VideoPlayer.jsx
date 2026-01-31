@@ -32,20 +32,28 @@ const VideoPlayer = ({ src, poster, title, vastTag }) => {
                 skipButtonClickCaption: 'Skip ad >',
                 vastAdvanced: {
                     vastVideoEndedCallback: function () {
-                        // Play video automatically when ad ends
-                        setTimeout(() => {
+                        // Aggressive retry to ensure video plays after ad
+                        const forcePlay = () => {
                             if (videoRef.current) {
-                                videoRef.current.play();
+                                videoRef.current.play().catch(err => console.log("Play attempt:", err));
                             }
-                        }, 200);
+                        };
+                        forcePlay();
+                        setTimeout(forcePlay, 100);
+                        setTimeout(forcePlay, 300);
+                        setTimeout(forcePlay, 500);
                     },
                     vastVideoSkippedCallback: function () {
-                        // Play video automatically when ad is skipped
-                        setTimeout(() => {
+                        // Aggressive retry to ensure video plays after skip
+                        const forcePlay = () => {
                             if (videoRef.current) {
-                                videoRef.current.play();
+                                videoRef.current.play().catch(err => console.log("Play attempt:", err));
                             }
-                        }, 200);
+                        };
+                        forcePlay();
+                        setTimeout(forcePlay, 100);
+                        setTimeout(forcePlay, 300);
+                        setTimeout(forcePlay, 500);
                     }
                 }
             }
