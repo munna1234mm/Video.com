@@ -35,11 +35,17 @@ const VideoPlayer = ({ src, poster, title, vastTag }) => {
                     vastVideoEndedCallback: () => {
                         // Force play when ad ends
                         if (playerInstance.current) {
-                            playerInstance.current.play();
+                            setTimeout(() => playerInstance.current.play(), 100);
                         }
                     },
                     vastVideoSkippedCallback: () => {
                         // Force play when ad is skipped
+                        if (playerInstance.current) {
+                            setTimeout(() => playerInstance.current.play(), 100);
+                        }
+                    },
+                    noVastVideoCallback: () => {
+                        // Play immediate if no ad
                         if (playerInstance.current) {
                             playerInstance.current.play();
                         }
