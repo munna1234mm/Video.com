@@ -355,7 +355,6 @@ const Video = () => {
                                 src={video.videoUrl || video.videoURL}
                                 poster={video.thumbnailUrl}
                                 title={video.title}
-                                vastTag="https://quickwittedconclusion.com/dGm/FDzwd.GLNJvzZoGXUN/heimM9OulZ/UvlikpPdTyY_3jN/jZE/2DNtTzMct/Nkjlcf2/MnThYI1rN/AS"
                             />
                         )}
                         {/* Fallback Error UI (Hidden by default) */}
