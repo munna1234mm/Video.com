@@ -32,28 +32,50 @@ const VideoPlayer = ({ src, poster, title, vastTag }) => {
                 skipButtonClickCaption: 'Skip ad >',
                 vastAdvanced: {
                     vastVideoEndedCallback: function () {
-                        // Aggressive retry to ensure video plays after ad
+                        console.log("Ad ended - forcing video playback");
                         const forcePlay = () => {
-                            if (videoRef.current) {
-                                videoRef.current.play().catch(err => console.log("Play attempt:", err));
+                            try {
+                                // Try player instance first
+                                if (playerInstance.current && typeof playerInstance.current.play === 'function') {
+                                    playerInstance.current.play();
+                                }
+                                // Fallback to video element
+                                if (videoRef.current) {
+                                    videoRef.current.play();
+                                }
+                            } catch (err) {
+                                console.log("Play error:", err);
                             }
                         };
+                        // Multiple attempts
                         forcePlay();
                         setTimeout(forcePlay, 100);
                         setTimeout(forcePlay, 300);
-                        setTimeout(forcePlay, 500);
+                        setTimeout(forcePlay, 600);
+                        setTimeout(forcePlay, 1000);
                     },
                     vastVideoSkippedCallback: function () {
-                        // Aggressive retry to ensure video plays after skip
+                        console.log("Ad skipped - forcing video playback");
                         const forcePlay = () => {
-                            if (videoRef.current) {
-                                videoRef.current.play().catch(err => console.log("Play attempt:", err));
+                            try {
+                                // Try player instance first
+                                if (playerInstance.current && typeof playerInstance.current.play === 'function') {
+                                    playerInstance.current.play();
+                                }
+                                // Fallback to video element
+                                if (videoRef.current) {
+                                    videoRef.current.play();
+                                }
+                            } catch (err) {
+                                console.log("Play error:", err);
                             }
                         };
+                        // Multiple attempts
                         forcePlay();
                         setTimeout(forcePlay, 100);
                         setTimeout(forcePlay, 300);
-                        setTimeout(forcePlay, 500);
+                        setTimeout(forcePlay, 600);
+                        setTimeout(forcePlay, 1000);
                     }
                 }
             }
