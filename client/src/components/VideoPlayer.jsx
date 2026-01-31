@@ -20,7 +20,6 @@ const VideoPlayer = ({ src, poster, title, vastTag }) => {
                 playButtonShowing: true,
                 playPauseAnimation: true,
                 mute: false,
-                preload: 'auto', // Preload main video
             },
             vastOptions: {
                 adList: [
@@ -43,12 +42,6 @@ const VideoPlayer = ({ src, poster, title, vastTag }) => {
                     }
                 }
             }
-        });
-
-        // Add specific event listener for VAST errors which might not trigger callbacks correctly
-        playerInstance.current.on('vastAdError', () => {
-            console.log("VAST Ad Error triggered, forcing playback");
-            handleAdEnd();
         });
 
         const handleAdEnd = () => {
