@@ -33,26 +33,29 @@ const VideoPlayer = ({ src, poster, title, vastTag }) => {
                 skipButtonClick: 'Skip ad',
                 vastAdvanced: {
                     vastVideoEndedCallback: () => {
-                        // Force play when ad ends
-                        if (playerInstance.current) {
-                            setTimeout(() => playerInstance.current.play(), 100);
-                        }
+                        handleAdEnd();
                     },
                     vastVideoSkippedCallback: () => {
-                        // Force play when ad is skipped
-                        if (playerInstance.current) {
-                            setTimeout(() => playerInstance.current.play(), 100);
-                        }
+                        handleAdEnd();
                     },
                     noVastVideoCallback: () => {
-                        // Play immediate if no ad
-                        if (playerInstance.current) {
-                            playerInstance.current.play();
-                        }
+                        handleAdEnd();
                     }
                 }
             }
         });
+
+        const handleAdEnd = () => {
+            if (!playerInstance.current) return;
+
+            // Aggressive retry strategy to ensure video plays
+            const playVideo = () => playerInstance.current?.play();
+
+            playVideo(); // Immediate attempt
+            setTimeout(playVideo, 100); // Quick retry
+            setTimeout(playVideo, 300); // Verify retry
+            setTimeout(playVideo, 500); // Final fallback
+        };
 
         // Cleanup function
         return () => {
