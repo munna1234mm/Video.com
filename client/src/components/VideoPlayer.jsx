@@ -19,9 +19,10 @@ const VideoPlayer = ({ src, poster, title, vastTag }) => {
                 title: title || '',
                 playButtonShowing: true,
                 playPauseAnimation: true,
-                mute: false,
+                mute: true, // Mute to allow autoplay
             },
             vastOptions: {
+                allowVPAID: true, // Enable VPAID ads
                 adList: [
                     {
                         roll: 'preRoll',
