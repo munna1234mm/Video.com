@@ -20,6 +20,7 @@ const VideoPlayer = ({ src, poster, title, vastTag }) => {
                 playButtonShowing: true,
                 playPauseAnimation: true,
                 mute: false,
+                preload: 'auto', // Preload main video
             },
             vastOptions: {
                 adList: [
@@ -29,7 +30,21 @@ const VideoPlayer = ({ src, poster, title, vastTag }) => {
                     }
                 ],
                 skipButtonCaption: 'Skip ad in [seconds]',
-                skipButtonClick: 'Skip ad'
+                skipButtonClick: 'Skip ad',
+                vastAdvanced: {
+                    vastVideoEndedCallback: () => {
+                        // Force play when ad ends
+                        if (playerInstance.current) {
+                            playerInstance.current.play();
+                        }
+                    },
+                    vastVideoSkippedCallback: () => {
+                        // Force play when ad is skipped
+                        if (playerInstance.current) {
+                            playerInstance.current.play();
+                        }
+                    }
+                }
             }
         });
 
