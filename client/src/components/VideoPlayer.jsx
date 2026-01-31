@@ -45,16 +45,36 @@ const VideoPlayer = ({ src, poster, title, vastTag }) => {
             }
         });
 
+        // Add specific event listener for VAST errors which might not trigger callbacks correctly
+        playerInstance.current.on('vastAdError', () => {
+            console.log("VAST Ad Error triggered, forcing playback");
+            handleAdEnd();
+        });
+
         const handleAdEnd = () => {
-            if (!playerInstance.current) return;
+            // Aggressive retry logic
+            const attemptPlay = async () => {
+                try {
+                    if (playerInstance.current) {
+                        await playerInstance.current.play();
+                    } else if (videoRef.current) {
+                        // Fallback to native play if instance is weird
+                        await videoRef.current.play();
+                    }
+                } catch (e) {
+                    console.error("Play attempt failed:", e);
+                    // If fluid player plays fail, try native element directly as last resort
+                    if (videoRef.current) {
+                        videoRef.current.play().catch(err => console.error("Native play failed", err));
+                    }
+                }
+            };
 
-            // Aggressive retry strategy to ensure video plays
-            const playVideo = () => playerInstance.current?.play();
-
-            playVideo(); // Immediate attempt
-            setTimeout(playVideo, 100); // Quick retry
-            setTimeout(playVideo, 300); // Verify retry
-            setTimeout(playVideo, 500); // Final fallback
+            // Immediate and staggered retries
+            attemptPlay();
+            [100, 300, 500, 1000, 2000].forEach(delay => {
+                setTimeout(attemptPlay, delay);
+            });
         };
 
         // Cleanup function
